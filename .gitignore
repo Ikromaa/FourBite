@@ -10,6 +10,7 @@ admin/node_modules/
 
 # Uploads folder
 # backend/uploads/
+# up
 
 # VSCode
 .vscode/
