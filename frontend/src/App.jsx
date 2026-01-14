@@ -5,7 +5,8 @@ import ContactPage from "./pages/ContactPage/ContactPage";
 import AboutPage from "./pages/AboutPage/AboutPage";
 import Menu from "./pages/Menu/Menu";
 import Cart from "./pages/Cart/Cart";
-import SignUp from "./components/signUp/signUp";
+// import SignUp from "./components/signUp/signUp";
+import SignUp from './components/SignUp/SignUp'
 import PrivateRoute from "./components/PrivateRoute/PrivateRoute";
 import VerifyPaymentPage from "./pages/VerifyPaymentPage/VerifyPaymentPage";
 import CheckoutPage from "./pages/CheckoutPage/CheckoutPage";
