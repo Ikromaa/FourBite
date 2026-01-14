@@ -3,7 +3,7 @@ import { useCart } from '../../cartContext/cartContext'
 import { Link } from 'react-router-dom'
 import { FaMinus, FaPlus, FaTimes, FaTrash } from "react-icons/fa";
 
-const API_URL = 'http://localhost:4000'
+const API_URL = 'https://fourbite-backend.onrender.com'
 
 const CartPage = () => {
 

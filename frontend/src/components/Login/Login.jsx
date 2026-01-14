@@ -5,7 +5,7 @@ import { iconClass, inputBase } from '../../assets/dummydata';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 
-const url = 'http://localhost:4000'
+const url = 'https://fourbite-backend.onrender.com'
 
 const Login = ({ onLoginSuccess, onClose }) => {
 

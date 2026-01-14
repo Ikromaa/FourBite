@@ -12,7 +12,7 @@ const List = () => {
     useEffect(() => {
         const fetchItems = async () => {
             try {
-                const {data} = await axios.get('http://localhost:4000/api/items');
+                const {data} = await axios.get('https://fourbite-backend.onrender.com/api/items');
                 setItems(data);
             } 
             catch (err) {
@@ -30,7 +30,7 @@ const List = () => {
         if (!window.confirm('Anda yakin ingin menghapus item ini?')) return;
 
         try {
-            await axios.delete(`http://localhost:4000/api/items/${itemId}`);
+            await axios.delete(`https://fourbite-backend.onrender.com/api/items/${itemId}`);
             setItems(prev => prev.filter(item => item._id !== itemId))
             console.log('Deleted item ID:', itemId)
         } 

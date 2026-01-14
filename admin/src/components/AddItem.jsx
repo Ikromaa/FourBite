@@ -54,7 +54,7 @@ const AddItem = () => {
             });
 
             const res = await axios.post(
-                'http://localhost:4000/api/items',
+                'https://fourbite-backend.onrender.com/api/items',
                 payload,
                 {headers: {'Content-Type': 'multipart/form-data'}}
             );
