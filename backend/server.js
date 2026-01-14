@@ -13,6 +13,7 @@ import orderRouter from './routes/orderRoutes.js'
 
 
 const app = express();
+app.set('trust proxy', 1);
 const port = process.env.PORT || 4000;
 
 const __filename = fileURLToPath(import.meta.url);
