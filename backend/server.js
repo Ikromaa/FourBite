@@ -21,7 +21,7 @@ const __dirname = path.dirname(__filename);
 // MIDLEWARE
 app.use(cors({
     origin: (origin,callback) => {
-        const allowedOrigins = ['http://localhost:5173','http://localhost:5174'];
+        const allowedOrigins = ['https://fourbite-frontend.onrender.com','https://fourbite-admin.onrender.com'];
         if(!origin || allowedOrigins.includes(origin)) {
             callback(null,true)
         }
