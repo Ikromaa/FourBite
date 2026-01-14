@@ -21,7 +21,12 @@ const __dirname = path.dirname(__filename);
 // MIDLEWARE
 app.use(cors({
     origin: (origin,callback) => {
-        const allowedOrigins = ['https://fourbite-frontend.onrender.com','https://fourbite-admin.onrender.com'];
+        const allowedOrigins = [
+            'https://ikroma.store',
+            'https://www.ikroma.store',
+            'https://fourbite-frontend.onrender.com',
+            'https://fourbite-admin.onrender.com'
+        ];
         if(!origin || allowedOrigins.includes(origin)) {
             callback(null,true)
         }
