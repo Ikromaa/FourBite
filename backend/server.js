@@ -26,7 +26,10 @@ app.use(cors({
             'https://ikroma.store',
             'https://www.ikroma.store',
             'https://fourbite-frontend.onrender.com',
-            'https://fourbite-admin.onrender.com'
+            'https://fourbite-admin.onrender.com',
+            'http://localhost:4000',
+            'http://localhost:5173',
+            'http://localhost:5174'
         ];
         if(!origin || allowedOrigins.includes(origin)) {
             callback(null,true)
