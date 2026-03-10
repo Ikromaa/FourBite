@@ -1,295 +1,224 @@
-# 🍔 FourBite — Food Ordering Web App
+# FourBite
 
-FourBite adalah aplikasi web pemesanan makanan full-stack yang terdiri dari **website pelanggan**, **panel admin**, dan **REST API backend**. Dibangun menggunakan React + Vite untuk frontend, Node.js + Express untuk backend, dan MongoDB Atlas sebagai database.
+A full-stack food ordering web application built as a final project for the Web Programming course. It consists of a customer-facing storefront, an admin panel, and a REST API backend — each deployed as a separate service.
 
----
-
-## 🌐 Demo
-
-| Layanan | URL |
-|---|---|
-| 🛍️ Website Pelanggan | https://ikroma.store |
-| 🖥️ Panel Admin | https://fourbite-admin.onrender.com |
-| ⚙️ Backend API | https://fourbite-backend.onrender.com |
+Live URLs:
+- Customer site: https://ikroma.store
+- Admin panel: https://fourbite-admin.onrender.com  
+- Backend API: https://fourbite-backend.onrender.com
 
 ---
 
-## 🧱 Tech Stack
+## Tech Stack
 
-### Frontend (Pelanggan)
-| Teknologi | Kegunaan |
-|---|---|
-| React 19 | UI Library |
-| Vite (rolldown) | Build Tool |
-| Tailwind CSS v4 | Styling |
-| React Router DOM v7 | Routing |
-| Framer Motion | Animasi |
-| Axios | HTTP Client |
-| React Hot Toast | Notifikasi |
-| React Icons | Icon Library |
+**Backend** — Node.js, Express v5, MongoDB Atlas, Mongoose, JWT, Bcrypt, Cloudinary, Multer, Stripe
 
-### Admin Panel
-| Teknologi | Kegunaan |
-|---|---|
-| React 19 | UI Library |
-| Vite (rolldown) | Build Tool |
-| Tailwind CSS v4 | Styling |
-| React Router DOM v7 | Routing |
-| Axios | HTTP Client |
-| React Icons | Icon Library |
-
-### Backend
-| Teknologi | Kegunaan |
-|---|---|
-| Node.js + Express v5 | REST API Server |
-| MongoDB Atlas + Mongoose | Database |
-| JWT (jsonwebtoken) | Autentikasi |
-| Bcrypt | Hash Password |
-| Cloudinary | Cloud Image Storage |
-| Multer + multer-storage-cloudinary | Upload Gambar |
-| Stripe | Pembayaran Online |
-| Dotenv | Environment Variables |
+**Frontend & Admin** — React 19, Vite, Tailwind CSS v4, React Router v7, Axios, Framer Motion
 
 ---
 
-## 📁 Struktur Project
+## Architecture
+
+The system follows a typical three-tier architecture. The frontend and admin panel are static React apps that communicate with the backend over HTTP. The backend handles all business logic, talks to MongoDB for persistent data, Cloudinary for image storage, and Stripe for payment processing.
+
+```
+Customer Browser          Admin Browser
+      |                        |
+      |  HTTPS requests        |  HTTPS requests
+      v                        v
++------------------Express REST API------------------+
+|                                                    |
+|   /api/user         /api/items      /api/orders    |
+|   /api/cart                                        |
+|                                                    |
+|   Auth Middleware (JWT)                            |
++----+--------------------+-------------------+------+
+     |                    |                   |
+     v                    v                   v
+MongoDB Atlas        Cloudinary           Stripe API
+(Users, Items,      (Menu images)       (Checkout sessions,
+ Cart, Orders)                           Payment confirmation)
+```
+
+When an admin uploads a menu item, the image goes directly to Cloudinary via Multer. The returned Cloudinary URL is stored in MongoDB. The frontend simply renders that URL — no images are stored on the server.
+
+For online payments, the backend creates a Stripe Checkout session and returns the redirect URL to the frontend. After payment, Stripe redirects the user back to the app where the frontend calls a confirmation endpoint to update the order status.
+
+---
+
+## Project Structure
 
 ```
 project_sister/
-├── backend/                  # REST API Server (Express)
-│   ├── config/               # Konfigurasi database
-│   ├── controllers/          # Logic handler tiap endpoint
+├── backend/
+│   ├── config/
+│   │   └── db.js                  # MongoDB connection
+│   ├── controllers/
 │   │   ├── cartController.js
 │   │   ├── itemController.js
-│   │   ├── orderController.js
+│   │   ├── orderController.js     # Stripe integration lives here
 │   │   └── userController.js
-│   ├── middleware/           # Auth middleware (JWT)
-│   ├── modals/               # Mongoose Schema / Model
+│   ├── middleware/
+│   │   └── auth.js                # JWT verification
+│   ├── modals/
 │   │   ├── cartModal.js
 │   │   ├── itemModal.js
 │   │   ├── orderModal.js
 │   │   └── userModal.js
-│   ├── routes/               # Express Router
+│   ├── routes/
 │   │   ├── cartRoutes.js
-│   │   ├── itemRoute.js
+│   │   ├── itemRoute.js           # Cloudinary upload configured here
 │   │   ├── orderRoutes.js
 │   │   └── userRoutes.js
-│   ├── .env                  # Environment variables (tidak di-commit)
+│   ├── .env
 │   ├── package.json
-│   └── server.js             # Entry point server
-├── frontend/                 # Website Pelanggan (React + Vite)
+│   └── server.js
+│
+├── frontend/
 │   └── src/
-│       ├── pages/            # Halaman: Home, Menu, Cart, Checkout, dll
-│       ├── components/       # Komponen reusable
-│       ├── cartContext/      # Context API untuk keranjang belanja
+│       ├── cartContext/           # Global cart state via Context API
+│       ├── components/
+│       │   ├── Banner/
+│       │   ├── Navbar/
+│       │   ├── OurMenu/
+│       │   ├── OurHomeMenu/
+│       │   ├── SpecialOffer/
+│       │   ├── Checkout/
+│       │   ├── CartPage/
+│       │   ├── MyOrder/
+│       │   ├── Login/
+│       │   ├── SignUp/
+│       │   ├── PrivateRoute/      # Route guard for authenticated pages
+│       │   ├── Footer/
+│       │   └── ...
+│       ├── pages/
+│       │   ├── Home/
+│       │   ├── Menu/
+│       │   ├── Cart/
+│       │   ├── CheckoutPage/
+│       │   ├── MyOrderPage/
+│       │   ├── VerifyPaymentPage/
+│       │   ├── AboutPage/
+│       │   └── ContactPage/
 │       └── App.jsx
-├── admin/                    # Panel Admin (React + Vite)
+│
+├── admin/
 │   └── src/
-│       └── components/       # AddItem, List, Order, Navbar
-└── package.json              # Root package (workspace)
+│       └── components/
+│           ├── AddItem.jsx        # Menu upload form
+│           ├── List.jsx           # Menu list with delete
+│           ├── Order.jsx          # Order management
+│           └── Navbar.jsx
+│
+└── package.json
 ```
 
 ---
 
-## ✨ Fitur
+## Features
 
-### 🛍️ Website Pelanggan
-- Browse menu makanan berdasarkan kategori
-- Keranjang belanja (Cart) dengan Context API
-- Checkout dengan isian alamat pengiriman
-- Pilihan pembayaran: **COD** atau **Online (Stripe)**
-- Verifikasi pembayaran otomatis via Stripe Webhook
-- Halaman **My Orders** untuk riwayat pesanan
-- Halaman About & Contact
+**Customer**
+- Browse menu by category
+- Add items to cart (persisted via Context API)
+- Checkout with delivery address form
+- Pay via Cash on Delivery or online through Stripe
+- View order history and live status updates
 
-### 🖥️ Panel Admin
-- Tambah menu beserta gambar (upload ke Cloudinary)
-- Lihat & hapus seluruh daftar menu
-- Monitoring semua pesanan masuk
-- Update status pesanan (Processing → Out for Delivery → Delivered)
-
-### ⚙️ Backend API
-- Register & Login user dengan JWT
-- CRUD menu item (dengan upload gambar ke Cloudinary)
-- Manajemen keranjang belanja per user
-- Buat pesanan + integrasi Stripe Checkout Session
-- Konfirmasi pembayaran dari Stripe
-- CRUD pesanan (user & admin)
+**Admin**
+- Upload new menu items with image (stored on Cloudinary)
+- Delete menu items
+- View all incoming orders
+- Update order status: Processing > Out for Delivery > Delivered
 
 ---
 
-## 🔌 API Endpoints
+## API Reference
 
-### User
-| Method | Endpoint | Deskripsi | Auth |
-|---|---|---|---|
-| POST | `/api/user/register` | Registrasi user baru | ❌ |
-| POST | `/api/user/login` | Login user | ❌ |
-
-### Items (Menu)
-| Method | Endpoint | Deskripsi | Auth |
-|---|---|---|---|
-| GET | `/api/items` | Ambil semua menu | ❌ |
-| POST | `/api/items` | Tambah menu + upload gambar | ❌ |
-| DELETE | `/api/items/:id` | Hapus menu | ❌ |
-
-### Cart
-| Method | Endpoint | Deskripsi | Auth |
-|---|---|---|---|
-| GET | `/api/cart` | Ambil isi keranjang user | ✅ |
-| POST | `/api/cart` | Tambah item ke keranjang | ✅ |
-| PUT | `/api/cart/:id` | Update item di keranjang | ✅ |
-| DELETE | `/api/cart/:id` | Hapus item dari keranjang | ✅ |
-
-### Orders
-| Method | Endpoint | Deskripsi | Auth |
-|---|---|---|---|
-| POST | `/api/orders` | Buat pesanan baru | ✅ |
-| GET | `/api/orders` | Riwayat pesanan user | ✅ |
-| GET | `/api/orders/confirm` | Konfirmasi pembayaran Stripe | ✅ |
-| GET | `/api/orders/:id` | Detail pesanan | ✅ |
-| PUT | `/api/orders/:id` | Update pesanan | ✅ |
-| GET | `/api/orders/getall` | Semua pesanan (admin) | ❌ |
-| PUT | `/api/orders/getall/:id` | Update status pesanan (admin) | ❌ |
-
-> **Auth ✅** = Memerlukan Bearer Token JWT di header `Authorization`
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| POST | /api/user/register | Register a new user | No |
+| POST | /api/user/login | Login and receive JWT | No |
+| GET | /api/items | Get all menu items | No |
+| POST | /api/items | Add a menu item with image | No |
+| DELETE | /api/items/:id | Delete a menu item | No |
+| GET | /api/cart | Get current user's cart | JWT |
+| POST | /api/cart | Add item to cart | JWT |
+| POST | /api/orders | Place an order | JWT |
+| GET | /api/orders | Get user's order history | JWT |
+| GET | /api/orders/confirm | Confirm Stripe payment | JWT |
+| GET | /api/orders/:id | Get single order | JWT |
+| GET | /api/orders/getall | Get all orders (admin) | No |
+| PUT | /api/orders/getall/:id | Update any order (admin) | No |
 
 ---
 
-## ⚙️ Cara Menjalankan Secara Lokal
+## Getting Started
 
-### Prasyarat
-- Node.js v18+
-- Akun MongoDB Atlas (dengan connection string)
-- Akun Cloudinary (untuk upload gambar)
-- Akun Stripe (untuk pembayaran online, opsional)
+Prerequisites: Node.js v18+, a MongoDB Atlas cluster, and a Cloudinary account.
 
-### 1. Clone Repository
 ```bash
-git clone <url-repo>
+git clone <repo-url>
 cd project_sister
+
+# Install dependencies for each service
+cd backend && npm install
+cd ../frontend && npm install
+cd ../admin && npm install
 ```
 
-### 2. Setup Backend
-```bash
-cd backend
-npm install
-```
+Create `backend/.env`:
 
-Buat file `.env` di folder `backend/` berisi:
 ```env
 JWT_SECRET=your_jwt_secret
-
-# App & Database
+MONGODB_URI=your_mongodb_atlas_uri
 FRONTEND_URL=http://localhost:5173
 BACKEND_URL=http://localhost:4000
-MONGODB_URI=mongodb+srv://<user>:<password>@cluster.mongodb.net/PemWeb
-
-# Cloudinary
 CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret
-
-# Stripe (opsional)
 STRIPE_SECRET_KEY=sk_test_xxx
 ```
 
-Jalankan backend:
+Run each service in a separate terminal:
+
 ```bash
-npm start
-```
-Server berjalan di `http://localhost:4000`
-
-### 3. Setup Frontend (Pelanggan)
-```bash
-cd frontend
-npm install
-npm run dev
-```
-Berjalan di `http://localhost:5173`
-
-### 4. Setup Admin Panel
-```bash
-cd admin
-npm install
-npm run dev
-```
-Berjalan di `http://localhost:5174`
-
----
-
-## ☁️ Deployment (Render)
-
-Project ini di-deploy di **Render** dengan 3 service terpisah:
-
-| Service | Folder | Tipe |
-|---|---|---|
-| `fourbite-backend` | `backend/` | Web Service (Node.js) |
-| `fourbite-frontend` | `frontend/` | Static Site |
-| `fourbite-admin` | `admin/` | Static Site |
-
-### Environment Variables di Render (Backend)
-Tambahkan di **Render → fourbite-backend → Environment**:
-```
-MONGODB_URI
-JWT_SECRET
-FRONTEND_URL
-BACKEND_URL
-STRIPE_SECRET_KEY
-CLOUDINARY_CLOUD_NAME
-CLOUDINARY_API_KEY
-CLOUDINARY_API_SECRET
-```
-
-> ⚠️ **Penting:** File gambar **tidak boleh** disimpan di server Render karena filesystem-nya bersifat ephemeral (hilang setiap redeploy). Pastikan selalu menggunakan Cloudinary untuk penyimpanan gambar.
-
----
-
-## 🗃️ Database Schema
-
-### User
-```
-username    String  required
-email       String  required, unique
-password    String  required (di-hash dengan bcrypt)
-```
-
-### Item (Menu)
-```
-name        String  required, unique
-description String  required
-category    String  required
-price       Number  required
-rating      Number  default 0
-hearts      Number  default 0
-total       Number  default 0
-imageUrl    String  (URL Cloudinary)
-```
-
-### Order
-```
-user            ObjectId (ref: User)
-firstName/lastName/email/phone  String
-address/city/zipCode            String
-items           [{ item: {name, price, imageUrl}, quantity }]
-paymentMethod   enum: cod | online | card | upi
-paymentStatus   enum: pending | completed | failed
-status          enum: processing | outForDelivery | delivered
-subTotal/tax/shipping/total     Number
-sessionId/paymentIntentId       String (Stripe)
+cd backend && npm start        # http://localhost:4000
+cd frontend && npm run dev     # http://localhost:5173
+cd admin && npm run dev        # http://localhost:5174
 ```
 
 ---
 
-## 📦 Branches
+## Deployment Notes
 
-| Branch | Keterangan |
-|---|---|
-| `main` | Production — branch utama yang di-deploy |
-| `feature/cloudinary-upload` | Migrasi image storage ke Cloudinary (sudah di-merge) |
+The project runs on three separate Render services (two static sites, one Node.js web service). Because Render's filesystem is ephemeral, all uploaded images are stored on Cloudinary rather than the server. Add all environment variables from `.env` to the Render dashboard under the backend service settings before deploying.
 
 ---
 
-## 👤 Author
+## What I Learned
 
-Dibuat sebagai **Tugas Akhir Pemrograman Web** — Semester 7
+Building this project from scratch covered a range of concepts that are common in real-world applications.
+
+**Authentication flow** — implementing JWT-based auth from token generation on login to middleware verification on protected routes, with token sent via Authorization header.
+
+**Image handling in production** — the difference between local disk storage (which breaks on ephemeral servers) and cloud storage. Switching from Multer's disk storage to Cloudinary using `multer-storage-cloudinary` solved the issue of images disappearing on every Render redeploy.
+
+**Stripe payment integration** — creating Checkout Sessions server-side, redirecting the user to Stripe's hosted page, then confirming the payment status on return via session ID lookup.
+
+**Multi-service architecture** — managing three separate deployments (backend, frontend, admin) with environment-specific base URLs and CORS configuration that accounts for all allowed origins.
+
+**MongoDB schema design** — modeling nested data like order items and embedding subdocuments versus referencing, and using Mongoose indexes for fields that are frequently queried (payment status, order status, user ID).
+
+---
+
+## License
+
+MIT License
+
+Copyright (c) 2026 Ikroma Hataf
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
