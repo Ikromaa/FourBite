@@ -3,8 +3,6 @@ import cors from 'cors'
 import 'dotenv/config'
 import { connectDB } from './config/db.js'
 
-import path from 'path';
-import { fileURLToPath } from 'url';
 
 import userRouter from './routes/userRoutes.js'
 import itemRouter from './routes/itemRoute.js'
@@ -16,8 +14,6 @@ const app = express();
 app.set('trust proxy', 1);
 const port = process.env.PORT || 4000;
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 // MIDLEWARE
 app.use(cors({
@@ -49,7 +45,6 @@ connectDB();
 
 // ROUTES
 app.use('/api/user', userRouter)
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/items', itemRouter)
 app.use('/api/cart', cartRouter)
 app.use('/api/orders', orderRouter)

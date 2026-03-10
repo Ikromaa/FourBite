@@ -1,18 +1,30 @@
 import express from 'express';
 import multer from 'multer';
-import { createItem,getItems,deleteItem } from '../controllers/itemController.js';
+import { v2 as cloudinary } from 'cloudinary';
+import { CloudinaryStorage } from 'multer-storage-cloudinary';
+import { createItem, getItems, deleteItem } from '../controllers/itemController.js';
 
 const itemRouter = express.Router();
 
-// MULTER FUNCTION TO STORAGE IMAGE
-const storage = multer.diskStorage({
-    destination: (_req, _file, cb) => cb(null, 'uploads/'),
-    filename: (_req,file,cb) => cb(null, `${Date.now()}-${file.originalname}`),
-})
+// CLOUDINARY CONFIG
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+// MULTER STORAGE → CLOUDINARY
+const storage = new CloudinaryStorage({
+    cloudinary,
+    params: {
+        folder: 'fourbite-menu',
+        allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
+    },
+});
 
 const upload = multer({ storage });
 
-itemRouter.post('/', upload.single('image'),createItem);
+itemRouter.post('/', upload.single('image'), createItem);
 itemRouter.get('/', getItems);
 itemRouter.delete('/:id', deleteItem);
 

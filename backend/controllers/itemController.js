@@ -3,7 +3,7 @@ import itemModal from "../modals/itemModal.js";
 export const createItem = async (req, res, next) => {
     try {
         const { name, description, category, price, rating, hearts } = req.body;
-        const imageUrl = req.file ? `/uploads/${req.file.filename}` : "";
+        const imageUrl = req.file ? req.file.path : "";
         
 
         const total = Number(price) * 1;
@@ -35,11 +35,9 @@ export const getItems = async (_req,res,next) => {
         const items = await itemModal.find().sort({createdAt: -1});
         // const host = `${_req.protocol}://${_req.get('host')}`;
 
-        const baseUrl = process.env.BACKEND_URL || `https://${_req.get('host')}`;
-
         const withFullUrl = items.map(i => ({
             ...i.toObject(),
-            imageUrl: i.imageUrl ? baseUrl + i.imageUrl : '',
+            imageUrl: i.imageUrl || '',
         }))
         res.json(withFullUrl);
     } 
