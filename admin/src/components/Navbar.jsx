@@ -47,7 +47,7 @@ const Navbar = () => {
                     {/* Logout - desktop */}
                     <button
                         onClick={handleLogout}
-                        className="flex items-center space-x-2 px-4 py-2 rounded-xl border-2 text-sm font-medium transition-all border-red-900/40 text-red-300 hover:border-red-500 hover:bg-red-900/20"
+                        className={styles.logoutBtn}
                     >
                         <FiLogOut />
                         <span>Logout</span>
@@ -75,7 +75,7 @@ const Navbar = () => {
                     {/* Logout - mobile */}
                     <button
                         onClick={handleLogout}
-                        className="flex items-center space-x-2 px-4 py-2 rounded-xl border-2 text-sm font-medium transition-all border-red-900/40 text-red-300 hover:border-red-500 hover:bg-red-900/20 w-full"
+                        className={`${styles.logoutBtn} w-full`}
                     >
                         <FiLogOut />
                         <span>Logout</span>

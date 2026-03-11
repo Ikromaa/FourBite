@@ -62,7 +62,8 @@ export const styles = {
     navLinkBase: "flex items-center space-x-2 px-4 py-2 rounded-xl border-2 text-sm font-medium transition-all",
     navLinkActive: "bg-amber-900/30 border-amber-500 text-amber-300",
     navLinkInactive: "border-amber-900/30 text-amber-100 hover:border-amber-500 hover:bg-amber-900/20",
-    mobileMenu: "lg:hidden flex flex-col space-y-3 mt-4 pb-4"
+    mobileMenu: "lg:hidden flex flex-col space-y-3 mt-4 pb-4",
+    logoutBtn: "flex items-center space-x-2 px-4 py-2 rounded-xl border-2 text-sm font-medium transition-all border-red-900/40 text-red-300 hover:border-red-500 hover:bg-red-900/20",
 };
 
 
