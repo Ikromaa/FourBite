@@ -1,6 +1,6 @@
 import axios from 'axios';
 import React, { useEffect, useState } from 'react'
-import { FaArrowLeft, FaCheckCircle, FaEye, FaEyeSlash } from 'react-icons/fa';
+import { FaArrowLeft, FaCheckCircle, FaEye, FaEyeSlash, FaTimesCircle } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 
@@ -23,9 +23,9 @@ const SignUp = () => {
 
     // FOR TOAST
     useEffect(() => {
-        if(showToast.visible && showToast.message === 'Sign Up Succesfull!') {
+        if(showToast.visible && showToast.message === 'Sign Up Successfull!') {
             const timer = setTimeout(() => {
-                setShowToast({ visible: true, message: '', icon: null })
+                setShowToast({ visible: false, message: '', icon: null })
                 navigate('/login');
             }, 2000)
             return () => clearTimeout(timer)
@@ -56,13 +56,15 @@ const SignUp = () => {
         catch (err) {
             console.error('Registration error', err)
             const msg = err.response?.data?.message || err.message || 'Registration failed';
-            setShowToast({ visible: false, message: msg, icon: <FaCheckCircle /> })
+            setShowToast({ visible: true, message: msg, icon: <FaTimesCircle /> })
         }
     }
 
     return (
         <div className=' min-h-screen flex items-center justify-center bg-[#1a120b] p-4'>
-            {showToast && <AwesomeToast message="Sign up successful" icon={<FaCheckCircle />}/>}
+            {showToast.visible && (
+                <AwesomeToast message={showToast.message} icon={showToast.icon} />
+            )}
 
             <div className=' w-full max-w-md bg-gradient-to-br from-[#2D1B0E] to-[#4a372a] p-8 rounded-xl shadow-lg
             border-4 border-amber-700/30 transform transition-all duration-300 hover:shadow-2xl'>
