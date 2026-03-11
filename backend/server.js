@@ -21,7 +21,7 @@ app.use(cors({
         const allowedOrigins = [
             'https://ikroma.store',
             'https://www.ikroma.store',
-            'https://www.admin.ikroma.store',
+            'https://admin.ikroma.store',
             'https://fourbite-frontend.onrender.com',
             'https://fourbite-admin.onrender.com',
             'http://localhost:4000',
