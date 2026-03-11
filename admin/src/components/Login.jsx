@@ -35,52 +35,26 @@ const Login = () => {
     };
 
     return (
-        <div style={{
-            minHeight: '100vh',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: 'linear-gradient(135deg, #1a120b 0%, #2a1e14 50%, #3e2b1d 100%)',
-        }}>
-            <div style={{ width: '100%', maxWidth: '420px', padding: '0 1rem' }}>
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#1a120b] via-[#2a1e14] to-[#3e2b1d]">
+            <div className="w-full max-w-md px-4">
                 {/* Card */}
-                <div style={{
-                    background: '#2D1B0E',
-                    borderRadius: '1.25rem',
-                    padding: '2.25rem 2rem',
-                    boxShadow: '0 20px 60px rgba(0,0,0,0.6)',
-                    border: '1px solid rgba(180,100,20,0.3)',
-                }}>
-                    {/* Header */}
-                    <div style={{ textAlign: 'center', marginBottom: '1.75rem' }}>
-                        <GiChefToque style={{
-                            fontSize: '3rem',
-                            color: '#f59e0b',
-                            marginBottom: '0.5rem',
-                        }} />
-                        <h1 style={{
-                            fontSize: '2rem',
-                            fontWeight: '800',
-                            color: '#f59e0b',
-                            margin: '0',
-                            letterSpacing: '0.01em',
-                        }}>
+                <div className="bg-[#2D1B0E] rounded-2xl p-9 shadow-2xl border border-[rgba(180,100,20,0.3)]">
+
+                    {/* Header - benar-benar center */}
+                    <div className="flex flex-col items-center text-center mb-7">
+                        <GiChefToque className="text-5xl text-amber-400 mb-2" />
+                        <h1 className="text-3xl font-extrabold text-amber-400 tracking-wide m-0">
                             FourBite
                         </h1>
-                        <p style={{ color: 'rgba(251,191,36,0.5)', fontSize: '0.85rem', margin: '0.25rem 0 0' }}>
-                            Admin Dashboard
-                        </p>
+                        <p className="text-amber-400/50 text-sm mt-1">Admin Dashboard</p>
                     </div>
 
                     {/* Form */}
-                    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+
                         {/* Email */}
-                        <div style={{ position: 'relative' }}>
-                            <FaUser style={{
-                                position: 'absolute', left: '1rem', top: '50%',
-                                transform: 'translateY(-50%)',
-                                color: '#f59e0b', fontSize: '0.9rem',
-                            }} />
+                        <div className="relative">
+                            <FaUser className="absolute left-4 top-1/2 -translate-y-1/2 text-amber-400 text-sm" />
                             <input
                                 type="email"
                                 name="email"
@@ -88,27 +62,13 @@ const Login = () => {
                                 onChange={handleChange}
                                 placeholder="Email"
                                 required
-                                style={{
-                                    width: '100%',
-                                    padding: '0.85rem 1rem 0.85rem 2.75rem',
-                                    background: '#3a2510',
-                                    border: '1px solid rgba(180,100,20,0.3)',
-                                    borderRadius: '0.75rem',
-                                    color: '#fef3c7',
-                                    fontSize: '0.95rem',
-                                    outline: 'none',
-                                    boxSizing: 'border-box',
-                                }}
+                                className="w-full py-3 pl-11 pr-4 bg-[#3a2510] border border-[rgba(180,100,20,0.3)] rounded-xl text-amber-100 placeholder-amber-400/40 text-sm outline-none focus:border-amber-500 transition-colors"
                             />
                         </div>
 
                         {/* Password */}
-                        <div style={{ position: 'relative' }}>
-                            <FaLock style={{
-                                position: 'absolute', left: '1rem', top: '50%',
-                                transform: 'translateY(-50%)',
-                                color: '#f59e0b', fontSize: '0.9rem',
-                            }} />
+                        <div className="relative">
+                            <FaLock className="absolute left-4 top-1/2 -translate-y-1/2 text-amber-400 text-sm" />
                             <input
                                 type="password"
                                 name="password"
@@ -116,31 +76,13 @@ const Login = () => {
                                 onChange={handleChange}
                                 placeholder="Password"
                                 required
-                                style={{
-                                    width: '100%',
-                                    padding: '0.85rem 1rem 0.85rem 2.75rem',
-                                    background: '#3a2510',
-                                    border: '1px solid rgba(180,100,20,0.3)',
-                                    borderRadius: '0.75rem',
-                                    color: '#fef3c7',
-                                    fontSize: '0.95rem',
-                                    outline: 'none',
-                                    boxSizing: 'border-box',
-                                }}
+                                className="w-full py-3 pl-11 pr-4 bg-[#3a2510] border border-[rgba(180,100,20,0.3)] rounded-xl text-amber-100 placeholder-amber-400/40 text-sm outline-none focus:border-amber-500 transition-colors"
                             />
                         </div>
 
-                        {/* Error message */}
+                        {/* Error */}
                         {error && (
-                            <div style={{
-                                background: 'rgba(239,68,68,0.12)',
-                                border: '1px solid rgba(239,68,68,0.35)',
-                                borderRadius: '0.65rem',
-                                padding: '0.65rem 1rem',
-                                color: '#fca5a5',
-                                fontSize: '0.85rem',
-                                textAlign: 'center',
-                            }}>
+                            <div className="bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3 text-red-300 text-sm text-center">
                                 {error}
                             </div>
                         )}
@@ -149,28 +91,11 @@ const Login = () => {
                         <button
                             type="submit"
                             disabled={loading}
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                gap: '0.5rem',
-                                padding: '0.9rem',
-                                background: loading
-                                    ? 'rgba(180,100,20,0.4)'
-                                    : 'linear-gradient(to right, #f59e0b, #d97706)',
-                                border: 'none',
-                                borderRadius: '0.75rem',
-                                color: '#2D1B0E',
-                                fontWeight: '800',
-                                fontSize: '1rem',
-                                cursor: loading ? 'not-allowed' : 'pointer',
-                                transition: 'transform 0.15s, box-shadow 0.15s',
-                                boxShadow: loading ? 'none' : '0 4px 20px rgba(245,158,11,0.3)',
-                                marginTop: '0.25rem',
-                                letterSpacing: '0.01em',
-                            }}
-                            onMouseEnter={e => { if (!loading) e.currentTarget.style.transform = 'scale(1.03)' }}
-                            onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)' }}
+                            className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-[#2D1B0E] text-base transition-transform
+                                ${loading
+                                    ? 'bg-amber-400/40 cursor-not-allowed'
+                                    : 'bg-gradient-to-r from-amber-400 to-amber-600 hover:scale-[1.02] active:scale-95 shadow-lg shadow-amber-900/30'
+                                }`}
                         >
                             {loading ? 'Sedang masuk...' : 'Sign In'}
                             {!loading && <FaArrowRight />}
