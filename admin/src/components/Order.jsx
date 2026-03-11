@@ -47,7 +47,9 @@ const Order = () => {
     const handleStatusChange = async (orderId, newStatus) => {
         try {
             await axios.put(`https://fourbite-backend.onrender.com/api/orders/getall/${orderId}`,
-                { status: newStatus });
+                { status: newStatus },
+                { headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}` } }
+            );
             setOrders(orders.map(o => o._id === orderId ? { ...o, status: newStatus } : o))
         } 
         catch (err) {

@@ -30,7 +30,9 @@ const List = () => {
         if (!window.confirm('Anda yakin ingin menghapus item ini?')) return;
 
         try {
-            await axios.delete(`https://fourbite-backend.onrender.com/api/items/${itemId}`);
+            await axios.delete(`https://fourbite-backend.onrender.com/api/items/${itemId}`, {
+                headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}` }
+            });
             setItems(prev => prev.filter(item => item._id !== itemId))
             console.log('Deleted item ID:', itemId)
         } 

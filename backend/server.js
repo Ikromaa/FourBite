@@ -8,6 +8,7 @@ import userRouter from './routes/userRoutes.js'
 import itemRouter from './routes/itemRoute.js'
 import cartRouter from './routes/cartRoutes.js'
 import orderRouter from './routes/orderRoutes.js'
+import adminAuthRouter from './routes/adminAuthRoutes.js'
 
 
 const app = express();
@@ -49,6 +50,7 @@ app.use('/api/user', userRouter)
 app.use('/api/items', itemRouter)
 app.use('/api/cart', cartRouter)
 app.use('/api/orders', orderRouter)
+app.use('/api/admin', adminAuthRouter)
 
 app.get('/', (req, res) => {
     res.send('API WORKING')
