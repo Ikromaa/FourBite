@@ -231,7 +231,7 @@ const MyOrder = () => {
                                                         <span className=' text-amber-300 text-lg'>{totalItems}</span>
                                                     </div>
                                                 </td>
-                                                <td className=' p-4 text-amber-300 text-lg'>Rp{totalPrice.toFixed(2)}</td>
+                                                <td className=' p-4 text-amber-300 text-lg'>Rp{Number(totalPrice).toLocaleString('id-ID')}</td>
 
                                                 <td className=' p-4'>
                                                     <div className=' flex flex-col gap-2'>
