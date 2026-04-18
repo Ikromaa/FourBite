@@ -1,7 +1,7 @@
 import {
     FiPlusCircle,
     FiList,
-    FiPackage,FiTruck, FiCheckCircle, FiClock,
+    FiPackage, FiTruck, FiCheckCircle, FiClock,
 } from 'react-icons/fi';
 
 

@@ -27,16 +27,16 @@ const Order = () => {
                     phone: order.phone ?? '',
                     items: order.items?.map(e => ({ _id: e._id, item: e.item, quantity: e.quantity })) || [],
                     createdAt: new Date(order.createdAt).toLocaleDateString('en-IN', {
-                    year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit',
+                        year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit',
                     }),
                 }));
 
                 setOrders(formatted);
                 setError(null);
-            } 
+            }
             catch (err) {
                 setError(err.response?.data?.message || 'Failed to load orders.');
-            } 
+            }
             finally {
                 setLoading(false);
             }
@@ -51,7 +51,7 @@ const Order = () => {
                 { headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}` } }
             );
             setOrders(orders.map(o => o._id === orderId ? { ...o, status: newStatus } : o))
-        } 
+        }
         catch (err) {
             alert(err.response?.data?.message || 'Failed to update order status')
         }
@@ -101,7 +101,7 @@ const Order = () => {
                                         <tr key={order._id} className={tableClasses.row}>
                                             <td className={tableClasses.cellBase +
                                                 ' font-mono text-sm text-amber-100'}>
-                                                    #{order._id.slice(-8)}
+                                                #{order._id.slice(-8)}
                                             </td>
 
                                             <td className={tableClasses.cellBase}>
@@ -136,18 +136,18 @@ const Order = () => {
                                                                 alt={itm.item.name} className=' w-10 h-10 object-cover
                                                                 rounded-lg' />
 
-                                                                <div className=' flex-1'>
-                                                                    <span className=' text-amber-100/80 text-sm block
+                                                            <div className=' flex-1'>
+                                                                <span className=' text-amber-100/80 text-sm block
                                                                     truncate'>
-                                                                        {itm.item.name}
-                                                                    </span>
+                                                                    {itm.item.name}
+                                                                </span>
 
-                                                                    <div className=' flex items-center gap-2 text-xs text-amber-400/60'>
+                                                                <div className=' flex items-center gap-2 text-xs text-amber-400/60'>
                                                                     <span>Rp{itm.item.price.toFixed(2)}</span>
                                                                     <span>&middot;</span>
                                                                     <span>x{itm.quantity}</span>
-                                                                    </div>
                                                                 </div>
+                                                            </div>
                                                         </div>
                                                     ))}
                                                 </div>
@@ -187,14 +187,14 @@ const Order = () => {
                                                     </span>
 
                                                     <select value={order.value}
-                                                    onChange={e => handleStatusChange(order._id, e.target.value)}
-                                                    className={`px-4 py-2 rounded-lg ${stat.bg} ${stat.color} border
+                                                        onChange={e => handleStatusChange(order._id, e.target.value)}
+                                                        className={`px-4 py-2 rounded-lg ${stat.bg} ${stat.color} border
                                                     border-amber-500/20 text-sm cursor-pointer`}>
-                                                        {Object.entries(statusStyles).filter(([k]) => k !== 'succeeded').map(([key,sty]) => (
+                                                        {Object.entries(statusStyles).filter(([k]) => ['processing', 'outForDelivery', 'delivered'].includes(k)).map(([key, sty]) => (
                                                             <option value={key} key={key}
                                                                 className={`${sty.bg} ${sty.color} `}>
-                                                                    {sty.label}
-                                                                </option>
+                                                                {sty.label}
+                                                            </option>
                                                         ))}
                                                     </select>
                                                 </div>
