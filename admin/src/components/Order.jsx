@@ -132,7 +132,7 @@ const Order = () => {
                                                 <div className=' space-y-1 max-h-52 overflow-auto'>
                                                     {order.items.map((itm, idx) => (
                                                         <div key={idx} className=' flex items-center gap-3 p-2 rounded-lg'>
-                                                            <img src={`https://fourbite-backend.onrender.com${itm.item.imageUrl}`}
+                                                            <img src={itm.item.imageUrl}
                                                                 alt={itm.item.name} className=' w-10 h-10 object-cover
                                                                 rounded-lg' />
 
