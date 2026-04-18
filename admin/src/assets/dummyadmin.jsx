@@ -123,7 +123,7 @@ export const statusStyles = {
         color: 'text-green-400',
         bg: 'bg-green-900/20',
         icon: 'FiCheckCircle',
-        label: 'Paid ✓',
+        label: 'Completed',
         hideLabel: false,
         isDelivery: false,
     },
