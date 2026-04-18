@@ -4,7 +4,7 @@ A full-stack food ordering web application built as a final project for the Web 
 
 Live URLs:
 - Customer site: https://ikroma.store
-- Admin panel: https://fourbite-admin.onrender.com  
+- Admin panel: https://admin.ikroma.store.com
 - Backend API: https://fourbite-backend.onrender.com
 
 ---
