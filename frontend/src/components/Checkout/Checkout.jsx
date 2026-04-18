@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react'
-import { data, Link, useLocation, useNavigate } from 'react-router-dom'
+import React, { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { FaArrowLeft, FaLock } from 'react-icons/fa'
 import { useCart } from '../../cartContext/cartContext'
 import axios from 'axios'
@@ -21,35 +21,23 @@ const Checkout = () => {
     const token = localStorage.getItem('authToken')
     const authHeaders = token? { Authorization: `Bearer ${token}` } : {}
 
-    // PAYMENT GATEWAY OPENING
-    useEffect(() => {
-        const params = new URLSearchParams(location.search);
-        const paymentStatus = params.get('payment_status');
-        const sessionId = params.get('session_id');
-
-        if (paymentStatus) {
-            setLoading(true);
-
-            if (paymentStatus === 'success' && sessionId) {
-                axios.post('https://fourbite-backend.onrender.com/api/orders/confirm',
-                    { sessionId },
-                    { headers: authHeaders })
-                    .then(({ data }) => {
-                        clearCart();
-                        navigate('/myorder', { state: { order: data.order } })
-                    })
-                    .catch(err => {
-                        console.error('Payment confirmation error:', err);
-                        setError('Payment confirmation failed. Please contact support.')
-                    })
-                    .finally(() => setLoading(false))
+    // CEK STATUS PEMBAYARAN (polling manual - berguna untuk testing lokal)
+    const checkPaymentStatus = async (orderId) => {
+        try {
+            const { data } = await axios.get(
+                `https://fourbite-backend.onrender.com/api/orders/payment-status/${orderId}`,
+                { headers: authHeaders }
+            );
+            if (data.paymentStatus === 'success') {
+                clearCart();
+                navigate('/myorder');
+            } else if (data.paymentStatus === 'failed') {
+                setError('Pembayaran gagal. Silakan coba lagi.');
             }
-            else if (paymentStatus === 'cancel') {
-                setError('Payment was cancelled or failed. Please contact support')
-                setLoading(false)
-            }
+        } catch (err) {
+            console.error('Error cek status:', err);
         }
-    }, [location.search, clearCart, navigate, authHeaders])
+    };
 
     const handleInputChange = e => {
         const { name, value } = e.target;
@@ -89,33 +77,55 @@ const Checkout = () => {
 
         try {
             if (formData.paymentMethod === 'online') {
-
-                console.log('Payload being sent:', payload);
-                console.log('Auth headers:', authHeaders);
-
-
+                // 1. Buat order & dapatkan Snap Token dari backend
                 const { data } = await axios.post(
                     'https://fourbite-backend.onrender.com/api/orders',
                     payload,
                     { headers: authHeaders }
                 );
-                window.location.href = data.checkoutUrl;
+
+                const { snapToken, order } = data;
+                setLoading(false);
+
+                // 2. Buka popup Midtrans Snap
+                window.snap.pay(snapToken, {
+                    onSuccess: (result) => {
+                        console.log('Pembayaran berhasil:', result);
+                        clearCart();
+                        navigate('/myorder');
+                    },
+                    onPending: (result) => {
+                        console.log('Pembayaran pending:', result);
+                        // Pembayaran masih pending (misal transfer bank), arahkan ke MyOrder
+                        navigate('/myorder');
+                    },
+                    onError: (result) => {
+                        console.error('Pembayaran error:', result);
+                        setError('Pembayaran gagal. Silakan coba lagi.');
+                    },
+                    onClose: () => {
+                        // User menutup popup tanpa bayar
+                        // Polling status bayar untuk cek apakah sudah terbayar
+                        checkPaymentStatus(order._id);
+                        console.log('Popup Midtrans ditutup.');
+                    }
+                });
             } else {
                 // COD
                 const { data } = await axios.post(
                     'https://fourbite-backend.onrender.com/api/orders',
                     payload,
                     { headers: authHeaders }
-                )
+                );
                 clearCart();
-                navigate('/myorder', {state: {order: data.order } })
+                navigate('/myorder', { state: { order: data.order } });
             }
         } catch (err) {
             console.error('Order submission error:', err);
-            setError(err.response?.data?.message || 'Failed to submit order')
+            setError(err.response?.data?.message || 'Failed to submit order');
         }
         finally {
-            setLoading(false)
+            setLoading(false);
         }
     }
 

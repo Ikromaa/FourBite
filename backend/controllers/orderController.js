@@ -1,8 +1,20 @@
-import Stripe from "stripe";
+import midtransClient from "midtrans-client";
 import Order from "../modals/orderModal.js";
 import 'dotenv/config';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+// Midtrans Snap Client (untuk membuat transaksi)
+const snap = new midtransClient.Snap({
+    isProduction: process.env.MIDTRANS_IS_PRODUCTION === 'true',
+    serverKey: process.env.MIDTRANS_SERVER_KEY,
+    clientKey: process.env.MIDTRANS_CLIENT_KEY,
+});
+
+// Midtrans Core API Client (untuk verifikasi notifikasi webhook)
+const coreApi = new midtransClient.CoreApi({
+    isProduction: process.env.MIDTRANS_IS_PRODUCTION === 'true',
+    serverKey: process.env.MIDTRANS_SERVER_KEY,
+    clientKey: process.env.MIDTRANS_CLIENT_KEY,
+});
 
 //CREATE ORDER FUNCTION
 export const createOrder = async (req, res) => {
@@ -32,35 +44,49 @@ export const createOrder = async (req, res) => {
         let newOrder;
 
         if (paymentMethod === 'online') {
-            const session = await stripe.checkout.sessions.create({
-                payment_method_types: ['card'],
-                mode: 'payment',
-
-                line_items: orderItems.map(o => ({
-                    price_data: {
-                        currency: 'idr',
-                        product_data: { name: o.item.name },
-                        unit_amount: Math.round(o.item.price)
-                    },
-                    quantity: o.quantity
-                })),
-                customer_email: email,
-                success_url: `${process.env.FRONTEND_URL}/myorder/verify?success=true&session_id={CHECKOUT_SESSION_ID}`,
-                cancel_url: `${process.env.FRONTEND_URL}/checkout?payment_status=cancel`,
-                metadata: { firstName,lastName, email, phone}
-            });
-
+            // Buat order dulu di database dengan status pending
             newOrder = new Order({
                 user: req.user._id,
                 firstName, lastName, phone, email, address, city, zipCode, paymentMethod, subTotal,
                 tax, total, shipping: shippingCost, items: orderItems,
-                paymentIntentId: session.payment_intent,
-                sessionId: session.id,
                 paymentStatus: 'pending'
             });
-
             await newOrder.save();
-            return res.status(201).json({ order: newOrder, checkoutUrl: session.url });
+
+            // Buat transaksi Midtrans Snap
+            const parameter = {
+                transaction_details: {
+                    order_id: newOrder._id.toString(), // Gunakan MongoDB _id sebagai order_id Midtrans
+                    gross_amount: Math.round(total),
+                },
+                customer_details: {
+                    first_name: firstName,
+                    last_name: lastName,
+                    email: email,
+                    phone: phone,
+                },
+                item_details: orderItems.map(o => ({
+                    id: o.item.name.replace(/\s+/g, '-').toLowerCase(),
+                    price: Math.round(o.item.price),
+                    quantity: o.quantity,
+                    name: o.item.name.substring(0, 50), // Midtrans max 50 karakter
+                })),
+                callbacks: {
+                    finish: `${process.env.FRONTEND_URL}/myorder`,
+                }
+            };
+
+            const snapTransaction = await snap.createTransaction(parameter);
+
+            // Simpan snap token ke order
+            newOrder.snapToken = snapTransaction.token;
+            await newOrder.save();
+
+            return res.status(201).json({
+                order: newOrder,
+                snapToken: snapTransaction.token,
+                redirectUrl: snapTransaction.redirect_url
+            });
         }
 
         // IF PAYMENT IS DONE COD
@@ -82,26 +108,87 @@ export const createOrder = async (req, res) => {
     }
 };
 
-// CONFIRM ORDER PAYMENT
-export const confirmOrderPayment = async (req, res) => {
+// MIDTRANS WEBHOOK NOTIFICATION HANDLER
+// Endpoint ini dipanggil otomatis oleh server Midtrans setelah pembayaran
+export const handleMidtransNotification = async (req, res) => {
     try {
-        const { session_id } = req.query
-        if (!session_id) return res.status(400).json({ message: 'Session ID is required' });
+        // Verifikasi notifikasi dari Midtrans (cek signature key)
+        const notification = await coreApi.transaction.notification(req.body);
 
-        const session = await stripe.checkout.sessions.retrieve(session_id)
-        if (session.payment_status === 'paid') {
-            const order = await Order.findOneAndUpdate(
-                { sessionId: session_id },
-                { paymentStatus: 'success' },
-                { new:  true }
-            );
-            if (!order) return res.status(404).json({ message: 'Order not found' })
-                return res.json(order);
+        const orderId = notification.order_id;           // = MongoDB _id kita
+        const transactionStatus = notification.transaction_status;
+        const fraudStatus = notification.fraud_status;
+
+        console.log(`Midtrans Notification - Order: ${orderId}, Status: ${transactionStatus}, Fraud: ${fraudStatus}`);
+
+        let paymentStatus = 'pending';
+
+        // Mapping status Midtrans → status kita
+        if (transactionStatus === 'capture') {
+            paymentStatus = fraudStatus === 'accept' ? 'success' : 'failed';
+        } else if (transactionStatus === 'settlement') {
+            paymentStatus = 'success';
+        } else if (['cancel', 'deny', 'expire'].includes(transactionStatus)) {
+            paymentStatus = 'failed';
+        } else if (transactionStatus === 'pending') {
+            paymentStatus = 'pending';
         }
-        return res.status(400).json({ message: 'Payment not completed' });
-    } 
+
+        // Update status order di database
+        const updatedOrder = await Order.findByIdAndUpdate(
+            orderId,
+            {
+                paymentStatus,
+                transactionId: notification.transaction_id,
+            },
+            { new: true }
+        );
+
+        if (!updatedOrder) {
+            console.error(`Order tidak ditemukan: ${orderId}`);
+            return res.status(404).json({ message: 'Order not found' });
+        }
+
+        console.log(`Order ${orderId} updated → paymentStatus: ${paymentStatus}`);
+        return res.status(200).json({ message: 'OK' });
+    }
     catch (err) {
-        console.error(err);
+        console.error('Midtrans notification error:', err);
+        res.status(500).json({ message: 'Server Error', error: err.message });
+    }
+};
+
+// CEK STATUS PEMBAYARAN (untuk polling dari frontend / testing lokal tanpa webhook)
+export const checkPaymentStatus = async (req, res) => {
+    try {
+        const { orderId } = req.params;
+
+        // Ambil status langsung dari Midtrans
+        const statusResponse = await coreApi.transaction.status(orderId);
+        const transactionStatus = statusResponse.transaction_status;
+        const fraudStatus = statusResponse.fraud_status;
+
+        let paymentStatus = 'pending';
+        if (transactionStatus === 'capture') {
+            paymentStatus = fraudStatus === 'accept' ? 'success' : 'failed';
+        } else if (transactionStatus === 'settlement') {
+            paymentStatus = 'success';
+        } else if (['cancel', 'deny', 'expire'].includes(transactionStatus)) {
+            paymentStatus = 'failed';
+        }
+
+        // Update dan kembalikan order
+        const order = await Order.findByIdAndUpdate(
+            orderId,
+            { paymentStatus, transactionId: statusResponse.transaction_id },
+            { new: true }
+        );
+
+        if (!order) return res.status(404).json({ message: 'Order not found' });
+        return res.json({ order, transactionStatus, paymentStatus });
+    }
+    catch (err) {
+        console.error('checkPaymentStatus error:', err);
         res.status(500).json({ message: 'Server Error', error: err.message });
     }
 }

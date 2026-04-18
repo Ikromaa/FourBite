@@ -37,10 +37,11 @@ const orderSchema = mongoose.Schema({
     },
     paymentIntentId: { type: String },
     sessionId: { type: String, index: true},
+    snapToken: { type: String },         // Token Midtrans Snap
     transactionId: { type: String },
     paymentStatus: {
         type: String,
-        enum: ['pending', 'completed', 'failed'],
+        enum: ['pending', 'success', 'failed', 'completed'],
         default: 'pending',
         index: true
     },
