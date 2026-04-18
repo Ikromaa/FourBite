@@ -77,12 +77,14 @@ export const iconMap = {
 
 // Status styles for order statuses
 export const statusStyles = {
+    // --- DELIVERY STATUS (tampil di dropdown admin) ---
     processing: {
         color: 'text-amber-400',
         bg: 'bg-amber-900/20',
         icon: 'FiClock',
         label: 'Processing',
         hideLabel: false,
+        isDelivery: true,
     },
     outForDelivery: {
         color: 'text-blue-400',
@@ -90,6 +92,7 @@ export const statusStyles = {
         icon: 'FiTruck',
         label: 'Out for Delivery',
         hideLabel: false,
+        isDelivery: true,
     },
     delivered: {
         color: 'text-green-400',
@@ -97,6 +100,7 @@ export const statusStyles = {
         icon: 'FiCheckCircle',
         label: 'Delivered',
         hideLabel: false,
+        isDelivery: true,
     },
     succeeded: {
         color: 'text-green-400',
@@ -104,6 +108,32 @@ export const statusStyles = {
         icon: 'FiCheckCircle',
         label: 'Completed',
         hideLabel: true,
+        isDelivery: false,
+    },
+    // --- PAYMENT STATUS (hanya tampil di kolom Payment) ---
+    pending: {
+        color: 'text-yellow-400',
+        bg: 'bg-yellow-900/20',
+        icon: 'FiClock',
+        label: 'Payment Pending',
+        hideLabel: false,
+        isDelivery: false,
+    },
+    success: {
+        color: 'text-green-400',
+        bg: 'bg-green-900/20',
+        icon: 'FiCheckCircle',
+        label: 'Paid ✓',
+        hideLabel: false,
+        isDelivery: false,
+    },
+    failed: {
+        color: 'text-red-400',
+        bg: 'bg-red-900/20',
+        icon: 'FiClock',
+        label: 'Payment Failed',
+        hideLabel: false,
+        isDelivery: false,
     },
 };
 
