@@ -88,14 +88,13 @@ const Checkout = () => {
 
                 // 2. Buka popup Midtrans Snap
                 window.snap.pay(snapToken, {
-                    onSuccess: (result) => {
+                    onSuccess: async (result) => {
                         console.log('Pembayaran berhasil:', result);
-                        clearCart();
-                        navigate('/myorder');
+                        // Update status di DB via backend, lalu navigate
+                        await checkPaymentStatus(order._id);
                     },
                     onPending: (result) => {
                         console.log('Pembayaran pending:', result);
-                        // Pembayaran masih pending (misal transfer bank), arahkan ke MyOrder
                         navigate('/myorder');
                     },
                     onError: (result) => {
@@ -103,8 +102,6 @@ const Checkout = () => {
                         setError('Pembayaran gagal. Silakan coba lagi.');
                     },
                     onClose: () => {
-                        // User menutup popup tanpa bayar
-                        // Polling status bayar untuk cek apakah sudah terbayar
                         checkPaymentStatus(order._id);
                         console.log('Popup Midtrans ditutup.');
                     }
