@@ -8,7 +8,6 @@ const Checkout = () => {
 
     const { totalAmount, cartItems, clearCart } = useCart();
     const navigate = useNavigate();
-    const location = useLocation();
     const [formData, setFormData] = useState({
         firstName: '', lastName: '', phone: '',
         email: '', address: '', city: '',
