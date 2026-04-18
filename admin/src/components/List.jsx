@@ -1,6 +1,6 @@
-import React, { useState,useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { styles } from '../assets/dummyadmin'
-import { FiHeart, FiStar, FiTrash2 } from 'react-icons/fi'
+import { FiHeart, FiStar, FiTrash2, FiEdit2, FiCheck, FiX } from 'react-icons/fi'
 import axios from 'axios'
 
 
@@ -8,6 +8,11 @@ const List = () => {
 
     const [items, setItems] = useState([])
     const [loading, setLoading] = useState(true)
+
+    // State untuk inline edit harga
+    const [editingId, setEditingId] = useState(null);
+    const [newPrice, setNewPrice] = useState('');
+    const [savingId, setSavingId] = useState(null);
 
     useEffect(() => {
         const fetchItems = async () => {
@@ -34,11 +39,49 @@ const List = () => {
                 headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}` }
             });
             setItems(prev => prev.filter(item => item._id !== itemId))
-            console.log('Deleted item ID:', itemId)
         } 
         catch (err) {
             console.error('Error deleting item:', err)
+            alert('Gagal menghapus item.')
         }
+    }
+
+    // EDIT PRICE — start editing
+    const handleEditPrice = (item) => {
+        setEditingId(item._id);
+        setNewPrice(String(item.price));
+    }
+
+    // SAVE NEW PRICE
+    const handleSavePrice = async (itemId) => {
+        const price = Number(newPrice);
+        if (isNaN(price) || price < 0) {
+            alert('Masukkan harga yang valid.');
+            return;
+        }
+        setSavingId(itemId);
+        try {
+            await axios.patch(
+                `https://fourbite-backend.onrender.com/api/items/${itemId}/price`,
+                { price },
+                { headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}` } }
+            );
+            setItems(prev => prev.map(i => i._id === itemId ? { ...i, price } : i));
+            setEditingId(null);
+        }
+        catch (err) {
+            console.error('Error updating price:', err);
+            alert(err.response?.data?.message || 'Gagal mengupdate harga.');
+        }
+        finally {
+            setSavingId(null);
+        }
+    }
+
+    // CANCEL EDITING
+    const handleCancelEdit = () => {
+        setEditingId(null);
+        setNewPrice('');
     }
 
     const renderStars = (rating) => 
@@ -54,9 +97,6 @@ const List = () => {
             </div>
         )
     };
-
-    console.log(items);
-
 
     return (
         <div className={styles.pageWrapper}>
@@ -94,15 +134,60 @@ const List = () => {
                                         </td>
 
                                         <td className={styles.categoryCell}>{item.category}</td>
-                                        <td className={styles.priceCell}>
-                                            {Number(item.price).toLocaleString('id-ID', {
-                                            style: 'currency',
-                                            currency: 'IDR',
-                                            minimumFractionDigits: 0,
-                                            })}
-                                        </td>
 
-                                        {/* <td className={styles.priceCell}>Rp{item.price}</td> */}
+                                        {/* PRICE CELL — inline edit */}
+                                        <td className={styles.priceCell}>
+                                            {editingId === item._id ? (
+                                                <div className='flex items-center gap-2'>
+                                                    <span className='text-amber-500 text-sm'>Rp</span>
+                                                    <input
+                                                        type='number'
+                                                        value={newPrice}
+                                                        onChange={e => setNewPrice(e.target.value)}
+                                                        onKeyDown={e => {
+                                                            if (e.key === 'Enter') handleSavePrice(item._id);
+                                                            if (e.key === 'Escape') handleCancelEdit();
+                                                        }}
+                                                        className='w-28 bg-[#3a2b2b] border border-amber-500/40 rounded-lg px-2 py-1
+                                                        text-amber-100 text-sm focus:outline-none focus:border-amber-400'
+                                                        autoFocus
+                                                    />
+                                                    <button
+                                                        onClick={() => handleSavePrice(item._id)}
+                                                        disabled={savingId === item._id}
+                                                        className='text-green-400 hover:text-green-300 transition-colors'
+                                                        title='Simpan'
+                                                    >
+                                                        <FiCheck className='text-lg' />
+                                                    </button>
+                                                    <button
+                                                        onClick={handleCancelEdit}
+                                                        className='text-red-400 hover:text-red-300 transition-colors'
+                                                        title='Batal'
+                                                    >
+                                                        <FiX className='text-lg' />
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <div className='flex items-center gap-2 group/price'>
+                                                    <span>
+                                                        {Number(item.price).toLocaleString('id-ID', {
+                                                            style: 'currency',
+                                                            currency: 'IDR',
+                                                            minimumFractionDigits: 0,
+                                                        })}
+                                                    </span>
+                                                    <button
+                                                        onClick={() => handleEditPrice(item)}
+                                                        className='opacity-0 group-hover/price:opacity-100 text-amber-400 
+                                                        hover:text-amber-300 transition-all'
+                                                        title='Edit harga'
+                                                    >
+                                                        <FiEdit2 className='text-sm' />
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </td>
 
                                         <td className={styles.ratingCell}>
                                             <div className='flex gap-1 '>{renderStars(item.rating)}</div>

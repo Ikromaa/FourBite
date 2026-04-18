@@ -33,7 +33,6 @@ export const createItem = async (req, res, next) => {
 export const getItems = async (_req,res,next) => {
     try {
         const items = await itemModal.find().sort({createdAt: -1});
-        // const host = `${_req.protocol}://${_req.get('host')}`;
 
         const withFullUrl = items.map(i => ({
             ...i.toObject(),
@@ -53,6 +52,26 @@ export const deleteItem = async (req, res, next) => {
         if(!removed) return res.status(404).json({ message: "Item tidak ditemukan." })
             res.status(200).end();
     } 
+    catch (err) {
+        next(err);
+    }
+}
+
+// UPDATE PRICE FUNCTION
+export const updateItemPrice = async (req, res, next) => {
+    try {
+        const { price } = req.body;
+        if (price === undefined || isNaN(Number(price)) || Number(price) < 0) {
+            return res.status(400).json({ message: "Harga tidak valid." });
+        }
+        const updated = await itemModal.findByIdAndUpdate(
+            req.params.id,
+            { price: Number(price) },
+            { new: true }
+        );
+        if (!updated) return res.status(404).json({ message: "Item tidak ditemukan." });
+        res.status(200).json(updated);
+    }
     catch (err) {
         next(err);
     }
