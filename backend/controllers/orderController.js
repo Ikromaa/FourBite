@@ -56,8 +56,8 @@ export const createOrder = async (req, res) => {
             // Buat transaksi Midtrans Snap
             const parameter = {
                 transaction_details: {
-                    order_id: newOrder._id.toString(), // Gunakan MongoDB _id sebagai order_id Midtrans
-                    gross_amount: Math.round(total),
+                    order_id: newOrder._id.toString(),
+                    gross_amount: Math.round(total), // total = subTotal + tax
                 },
                 customer_details: {
                     first_name: firstName,
@@ -65,12 +65,22 @@ export const createOrder = async (req, res) => {
                     email: email,
                     phone: phone,
                 },
-                item_details: orderItems.map(o => ({
-                    id: o.item.name.replace(/\s+/g, '-').toLowerCase(),
-                    price: Math.round(o.item.price),
-                    quantity: o.quantity,
-                    name: o.item.name.substring(0, 50), // Midtrans max 50 karakter
-                })),
+                // FIX: item_details harus sama persis dengan gross_amount
+                // Tambah tax sebagai line item agar tidak mismatch
+                item_details: [
+                    ...orderItems.map(o => ({
+                        id: o.item.name.replace(/\s+/g, '-').toLowerCase().substring(0, 50),
+                        price: Math.round(o.item.price),
+                        quantity: o.quantity,
+                        name: o.item.name.substring(0, 50),
+                    })),
+                    {
+                        id: 'tax',
+                        price: Math.round(tax),
+                        quantity: 1,
+                        name: 'Tax (5%)',
+                    }
+                ],
                 callbacks: {
                     finish: `${process.env.FRONTEND_URL}/myorder`,
                 }
