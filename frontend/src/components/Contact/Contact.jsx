@@ -137,7 +137,9 @@ const Contact = () => {
 
                                     <div className=' relative'>
                                         <div className=' absolute left-3 top-1/2 transform -translate-y-1/2 '>
-                                            <Icon className=' text-amber-500 text-xl animate-pulse' />
+                                            {React.createElement(Icon, {
+                                                className: 'text-amber-500 text-xl animate-pulse'
+                                            })}
                                         </div>
                                         <input type={type} value={formData[name]} name={name} onChange={handleChange}
                                         className=' w-full pl-10 pr-4 py-3 bg-white/10 border-2 border-amber-500/30 rounded-xl

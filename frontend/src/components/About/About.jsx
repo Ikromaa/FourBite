@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+// eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion'
 import { features, stats, teamMembers } from '../../assets/dummydata'
 import { FaXTwitter, FaInstagram, FaFacebookF, FaLinkedinIn } from 'react-icons/fa6';

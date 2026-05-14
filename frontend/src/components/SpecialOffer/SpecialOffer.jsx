@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { addButtonBase, addButtonHover, additionalData, cardData, commonTransition } from '../../assets/dummydata';
+import { addButtonBase, addButtonHover, commonTransition } from '../../assets/dummydata';
 import { useCart } from '../../cartContext/cartContext';
 import { FaFire, FaHeart, FaPlus, FaStar } from 'react-icons/fa';
 import { HiMinus, HiPlus } from 'react-icons/hi';

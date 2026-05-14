@@ -3,6 +3,8 @@ import { useCart } from '../../cartContext/cartContext'
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
+const API_URL = 'https://fourbite-backend.onrender.com';
+
 const VerifyPaymentPage = () => {
 
     const { clearCart } = useCart();
@@ -11,36 +13,37 @@ const VerifyPaymentPage = () => {
     const [statusMsg, setStatusMsg] = useState('Verifying Payment...')
 
     // PAYMENT GATEWAY OPENING
-        useEffect(() => {
-            const params = new URLSearchParams(search);
-            const success = params.get('success');
-            const session_id = params.get('session_id');
+    useEffect(() => {
+        const params = new URLSearchParams(search);
+        const orderId = params.get('order_id') || params.get('orderId');
+        const transactionStatus = params.get('transaction_status');
 
-            // MISSING OR CANCELED
-            if (success !== 'true' || !session_id) {
-                if (success === 'false') {
-                    navigate('/checkout', { replace: true })
-                    return;
-                }
-                setStatusMsg('Payment failed but order placed for completion.')
-                return;
-            }
+        if (['cancel', 'deny', 'expire'].includes(transactionStatus)) {
+            setStatusMsg('Pembayaran gagal. Mengarahkan kembali ke checkout...');
+            navigate('/checkout', { replace: true });
+            return;
+        }
 
-            // STRIPE SUCCESS=TRUE
-            axios.get('https://fourbite-backend.onrender.com/api/orders/confirm', {
-                params: { session_id },
-                withCredentials: true
-            })
-            .then(() => {
+        if (!orderId) {
+            setStatusMsg('Referensi pembayaran tidak ditemukan. Membuka riwayat order...');
+            navigate('/myorder', { replace: true });
+            return;
+        }
+
+        axios.get(`${API_URL}/api/orders/payment-status/${orderId}`, {
+            withCredentials: true
+        })
+        .then(({ data }) => {
+            if (data.paymentStatus === 'success') {
                 clearCart();
-                navigate('/myorder', { replace: true })
-            })
-            .catch(err => {
-                console.error('Confirmation error:', err)
-                setStatusMsg('There wa an error');
-                clearCart(false);
-            })
-        }, [search, clearCart, navigate])
+            }
+            navigate('/myorder', { replace: true });
+        })
+        .catch(err => {
+            console.error('Payment verification error:', err)
+            setStatusMsg('Terjadi kesalahan saat verifikasi pembayaran.');
+        })
+    }, [search, clearCart, navigate])
 
 
     return (

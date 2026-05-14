@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react'
 import { useCart } from '../../cartContext/cartContext';
-import { dummyMenuData } from '../../assets/OmhDD'
 import { FaMinus, FaPlus } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import './OurHomeMenu.css'

@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react'
 import { useCart } from '../../cartContext/cartContext';
-import { dummyMenuData } from '../../assets/OmDD'
 import { FaMinus, FaPlus } from 'react-icons/fa';
 import './OurMenu.css'
 import axios from 'axios';
@@ -34,7 +33,6 @@ const OurMenu = () => {
 
     // USE ID TO FIND AND UPDATE
     const getCartEntry = id => cartItems.find(ci => ci.item._id === id);
-    const getQuantity = id => getCartEntry(id)?.quantity || 0;
 
     // ITEMS TO DISPLAY
     const displayItems = (menuData[activeCategory] ?? [].slice(0, 12))

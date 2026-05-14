@@ -96,7 +96,9 @@ const Footer = () => {
                                     className=' text-2xl bg-amber-400/10 p-3 rounded-full hover:bg-amber-400/20 hover:scale-110
                                     transition-all duration-300 relative group'
                                     style={{color}}>
-                                        <Icon className=' hover:scale-125 transition-transform' />
+                                        {React.createElement(Icon, {
+                                            className: 'hover:scale-125 transition-transform'
+                                        })}
                                         <span className=' absolute -bottom-8 left-1/2 -translate-x-1/2 bg-amber-400
                                         text-black px-2 py-1 rounded text-xs font-bold opacity-0
                                         group-hover:opacity-100 transition-opacity'>
