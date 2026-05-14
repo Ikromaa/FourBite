@@ -15,7 +15,7 @@ const Order = () => {
                 const response = await axios.get(
                     'https://fourbite-backend.onrender.com/api/orders/getall',
                     {
-                        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+                        headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}` },
                     } //optional
                 );
 

@@ -1,11 +1,12 @@
 import express from 'express';
 import { handleMidtransNotification, checkPaymentStatus, createOrder, getAllOrders, getOrders, getOrderById, updateAnyOrder, updateOrder } from '../controllers/orderController.js';
 import authMiddleware from '../middleware/auth.js';
+import adminAuth from '../middleware/adminAuth.js';
 
 const orderRouter = express.Router();
 
-orderRouter.get('/getall', getAllOrders)
-orderRouter.put('/getall/:id', updateAnyOrder);
+orderRouter.get('/getall', adminAuth, getAllOrders)
+orderRouter.put('/getall/:id', adminAuth, updateAnyOrder);
 
 // MIDTRANS WEBHOOK - dipanggil server Midtrans, TANPA auth middleware
 orderRouter.post('/midtrans-notification', handleMidtransNotification);
