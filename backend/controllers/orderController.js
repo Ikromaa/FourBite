@@ -329,12 +329,19 @@ export const getAllOrders = async (req, res) => {
     }
 }
 
-// UPDATE ORDER WITHOUT TOKEN FOR ADMIN
+// UPDATE DELIVERY STATUS FOR ADMIN
 export const updateAnyOrder = async (req, res) => {
     try {
+        const { status } = req.body;
+        const allowedStatuses = ['processing', 'outForDelivery', 'delivered'];
+
+        if (!allowedStatuses.includes(status)) {
+            return res.status(400).json({ message: 'Status order tidak valid.' });
+        }
+
         const updated = await Order.findByIdAndUpdate(
             req.params.id,
-            req.body,
+            { status },
             { new: true, runValidators: true }
         );
 
