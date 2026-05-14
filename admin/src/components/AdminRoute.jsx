@@ -2,7 +2,7 @@ import React from 'react';
 import { Navigate } from 'react-router-dom';
 
 const AdminRoute = ({ children }) => {
-    const token = localStorage.getItem('adminToken');
+    const token = localStorage.getItem('adminSession');
 
     if (!token) {
         return <Navigate to="/login" replace />;

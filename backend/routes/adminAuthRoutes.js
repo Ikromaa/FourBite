@@ -1,9 +1,11 @@
 import express from 'express';
-import { adminLogin } from '../controllers/adminAuthController.js';
+import { adminLogin, adminLogout } from '../controllers/adminAuthController.js';
+import { adminAuthLimiter } from '../middleware/rateLimiters.js';
 
 const adminAuthRouter = express.Router();
 
 // POST /api/admin/login
-adminAuthRouter.post('/login', adminLogin);
+adminAuthRouter.post('/login', adminAuthLimiter, adminLogin);
+adminAuthRouter.post('/logout', adminLogout);
 
 export default adminAuthRouter;

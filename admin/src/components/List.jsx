@@ -36,7 +36,7 @@ const List = () => {
 
         try {
             await axios.delete(`https://fourbite-backend.onrender.com/api/items/${itemId}`, {
-                headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}` }
+                withCredentials: true
             });
             setItems(prev => prev.filter(item => item._id !== itemId))
         } 
@@ -64,7 +64,7 @@ const List = () => {
             await axios.patch(
                 `https://fourbite-backend.onrender.com/api/items/${itemId}/price`,
                 { price },
-                { headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}` } }
+                { withCredentials: true }
             );
             setItems(prev => prev.map(i => i._id === itemId ? { ...i, price } : i));
             setEditingId(null);

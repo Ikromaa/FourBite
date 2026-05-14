@@ -15,7 +15,7 @@ const Order = () => {
                 const response = await axios.get(
                     'https://fourbite-backend.onrender.com/api/orders/getall',
                     {
-                        headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}` },
+                        withCredentials: true,
                     } //optional
                 );
 
@@ -48,7 +48,7 @@ const Order = () => {
         try {
             await axios.put(`https://fourbite-backend.onrender.com/api/orders/getall/${orderId}`,
                 { status: newStatus },
-                { headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}` } }
+                { withCredentials: true }
             );
             setOrders(orders.map(o => o._id === orderId ? { ...o, status: newStatus } : o))
         }

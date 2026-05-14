@@ -17,9 +17,7 @@ const MyOrder = () => {
             try {
                 const response = await axios.get('https://fourbite-backend.onrender.com/api/orders', {
                     params: { email: user?.email },
-                    headers: {
-                        Authorization: `Bearer ${localStorage.getItem('authToken')}`
-                    }
+                    withCredentials: true
                 })
 
                 // FORMAT FOR DATA
@@ -114,6 +112,12 @@ const MyOrder = () => {
     };
 
     // IN CASE OF ERROR
+    if(loading) return (
+        <div className=' min-h-screen bg-gradient-to-br from-[#1a120b] via-[#2a1e14] to-[#3e2b1d] flex items-center justify-center text-amber-400 text-xl'>
+            Loading orders...
+        </div>
+    )
+
     if(error) return (
         <div className=' min-h-screen bg-gradient-to-br from-[#1a120b] via-[#2a1e14] to-[#3e2b1d] flex items-center justify-center text-red-400
         text-xl gap-4'>

@@ -16,16 +16,12 @@ const Checkout = () => {
     const [loading, setLoading] = useState(false);
     const [error,setError] = useState(null);
 
-    // GRAB TOKEN
-    const token = localStorage.getItem('authToken')
-    const authHeaders = token? { Authorization: `Bearer ${token}` } : {}
-
     // CEK STATUS PEMBAYARAN (polling manual - berguna untuk testing lokal)
     const checkPaymentStatus = async (orderId) => {
         try {
             const { data } = await axios.get(
                 `https://fourbite-backend.onrender.com/api/orders/payment-status/${orderId}`,
-                { headers: authHeaders }
+                { withCredentials: true }
             );
             if (data.paymentStatus === 'success') {
                 clearCart();
@@ -71,7 +67,7 @@ const Checkout = () => {
                 const { data } = await axios.post(
                     'https://fourbite-backend.onrender.com/api/orders',
                     payload,
-                    { headers: authHeaders }
+                    { withCredentials: true }
                 );
 
                 const { snapToken, order } = data;
@@ -102,7 +98,7 @@ const Checkout = () => {
                 const { data } = await axios.post(
                     'https://fourbite-backend.onrender.com/api/orders',
                     payload,
-                    { headers: authHeaders }
+                    { withCredentials: true }
                 );
                 clearCart();
                 navigate('/myorder', { state: { order: data.order } });

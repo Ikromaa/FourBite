@@ -15,7 +15,10 @@ const Login = ({ onLoginSuccess, onClose }) => {
 
     useEffect(() => {
         const stored = localStorage.getItem('loginData');
-        if(stored) setFormData(JSON.parse(stored));
+        if(stored) {
+            const saved = JSON.parse(stored);
+            setFormData(prev => ({ ...prev, email: saved.email || '' }));
+        }
     }, []);
 
     const handleSubmit = async e => {
@@ -24,20 +27,19 @@ const Login = ({ onLoginSuccess, onClose }) => {
             const res = await axios.post(`${url}/api/user/login`, {
                 email: formData.email,
                 password: formData.password,
-            })
+            }, { withCredentials: true })
             console.log('Axios Res:', res)
 
-            if(res.status === 200 && res.data.success && res.data.token) {
-                localStorage.setItem('authToken', res.data.token);
-
+            if(res.status === 200 && res.data.success) {
                 // REMEMBER ME
-                formData.rememberMe ? localStorage.setItem('loginData', JSON.stringify(formData))
-                    : localStorage.removeItem('loginData')
+                const loginData = { loggedIn: true, email: formData.email };
+                formData.rememberMe ? localStorage.setItem('loginData', JSON.stringify(loginData))
+                    : localStorage.setItem('loginData', JSON.stringify({ loggedIn: true }))
 
                 setShowToast({ visible: true, message: 'Login Successfull!', isError: false })
                 setTimeout(() => {
                     setShowToast({ visible: false, message: '', isError: false })
-                    onLoginSuccess(res.data.token)
+                    onLoginSuccess()
                 }, 1500)
             }
             else {
@@ -54,7 +56,6 @@ const Login = ({ onLoginSuccess, onClose }) => {
             setShowToast({ visible: true, message: msg, isError: true })
             setTimeout(() => {
                     setShowToast({ visible: false, message: '', isError: false })
-                    onLoginSuccess(res.data.token)
                 }, 2000)
         }
     }

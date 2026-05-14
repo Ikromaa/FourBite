@@ -39,11 +39,11 @@ const SignUp = () => {
         e.preventDefault();
         console.log('Sign up fired:', formData)
         try {
-            const res = await axios.post(`${url}/api/user/register`, formData)
+            const res = await axios.post(`${url}/api/user/register`, formData, { withCredentials: true })
             console.log('Register Response:', res.data)
 
-            if (res.data.success && res.data.token) {
-                localStorage.setItem('authToken', res.data.token)
+            if (res.data.success) {
+                localStorage.setItem('loginData', JSON.stringify({ loggedIn: true, email: formData.email }))
                 setShowToast({
                     visible: true,
                     message: 'Sign Up Successfull!',

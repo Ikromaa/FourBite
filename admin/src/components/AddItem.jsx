@@ -53,13 +53,13 @@ const AddItem = () => {
                 payload.append(key, val)
             });
 
-            const res = await axios.post(
+            await axios.post(
                 'https://fourbite-backend.onrender.com/api/items',
                 payload,
                 {headers: {
                     'Content-Type': 'multipart/form-data',
-                    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                }}
+                },
+                withCredentials: true}
             );
             setFormData({
                 name: '',

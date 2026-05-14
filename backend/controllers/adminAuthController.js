@@ -1,5 +1,6 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import { clearAuthCookie, setAuthCookie } from '../utils/authCookies.js';
 
 export const adminLogin = async (req, res) => {
     const { email, password } = req.body;
@@ -23,9 +24,15 @@ export const adminLogin = async (req, res) => {
             { expiresIn: '7d' }
         );
 
-        return res.status(200).json({ success: true, token });
+        setAuthCookie(req, res, 'adminToken', token);
+        return res.status(200).json({ success: true });
     } catch (err) {
         console.error('Admin login error:', err);
         return res.status(500).json({ success: false, message: 'Internal server error' });
     }
+};
+
+export const adminLogout = (req, res) => {
+    clearAuthCookie(req, res, 'adminToken');
+    return res.status(200).json({ success: true });
 };

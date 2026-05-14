@@ -22,9 +22,10 @@ const Login = () => {
         setLoading(true);
         setError('');
         try {
-            const { data } = await axios.post(`${BACKEND_URL}/api/admin/login`, form);
+            const { data } = await axios.post(`${BACKEND_URL}/api/admin/login`, form, { withCredentials: true });
             if (data.success) {
-                localStorage.setItem('adminToken', data.token);
+                localStorage.setItem('adminSession', JSON.stringify({ loggedIn: true, email: form.email }));
+                localStorage.removeItem('adminToken');
                 navigate('/');
             }
         } catch (err) {

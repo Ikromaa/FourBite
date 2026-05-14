@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import axios from 'axios';
 import { GiForkKnifeSpoon,GiChefToque } from 'react-icons/gi';
 import { Navigate, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import {
@@ -15,6 +16,8 @@ import {
 import Login from '../Login/Login'
 
 import { useCart } from '../../cartContext/cartContext'
+
+const API_URL = 'https://fourbite-backend.onrender.com'
 
 const Navbar = () => {
 
@@ -40,8 +43,14 @@ const Navbar = () => {
         navigate('/');
     }
 
-    const handleLogout = () => {
+    const handleLogout = async () => {
+        try {
+            await axios.post(`${API_URL}/api/user/logout`, {}, { withCredentials: true });
+        } catch (err) {
+            console.error('Logout error:', err);
+        }
         localStorage.removeItem('loginData');
+        localStorage.removeItem('authToken');
         setIsAuthenticated(false);
     }
 

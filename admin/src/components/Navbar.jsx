@@ -1,14 +1,23 @@
 import React, { useState } from 'react'
+import axios from 'axios';
 import { navLinks, styles } from '../assets/dummyadmin';
 import { GiChefToque } from "react-icons/gi";
 import { FiMenu, FiX, FiLogOut } from 'react-icons/fi';
 import { NavLink, useNavigate } from 'react-router-dom';
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://fourbite-backend.onrender.com';
+
 const Navbar = () => {
     const [menuOpen, setMenuOpen] = useState(false);
     const navigate = useNavigate();
 
-    const handleLogout = () => {
+    const handleLogout = async () => {
+        try {
+            await axios.post(`${BACKEND_URL}/api/admin/logout`, {}, { withCredentials: true });
+        } catch (err) {
+            console.error('Admin logout error:', err);
+        }
+        localStorage.removeItem('adminSession');
         localStorage.removeItem('adminToken');
         navigate('/login');
     };

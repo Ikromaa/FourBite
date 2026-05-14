@@ -10,10 +10,6 @@ const VerifyPaymentPage = () => {
     const navigate = useNavigate();
     const [statusMsg, setStatusMsg] = useState('Verifying Payment...')
 
-    // GRAB TOKEN
-    const token = localStorage.getItem('authToken')
-    const authHeaders = token? { Authorization: `Bearer ${token}` } : {}
-
     // PAYMENT GATEWAY OPENING
         useEffect(() => {
             const params = new URLSearchParams(search);
@@ -33,7 +29,7 @@ const VerifyPaymentPage = () => {
             // STRIPE SUCCESS=TRUE
             axios.get('https://fourbite-backend.onrender.com/api/orders/confirm', {
                 params: { session_id },
-                headers: authHeaders
+                withCredentials: true
             })
             .then(() => {
                 clearCart();
@@ -44,7 +40,7 @@ const VerifyPaymentPage = () => {
                 setStatusMsg('There wa an error');
                 clearCart(false);
             })
-        }, [search, clearCart, navigate, authHeaders])
+        }, [search, clearCart, navigate])
 
 
     return (

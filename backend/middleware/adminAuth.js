@@ -2,12 +2,13 @@ import jwt from 'jsonwebtoken';
 
 const adminAuth = (req, res, next) => {
     const authHeader = req.headers.authorization;
+    const cookieToken = req.cookies?.adminToken;
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (!cookieToken && (!authHeader || !authHeader.startsWith('Bearer '))) {
         return res.status(401).json({ success: false, message: 'Token tidak ditemukan' });
     }
 
-    const token = authHeader.split(' ')[1];
+    const token = cookieToken || authHeader.split(' ')[1];
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
