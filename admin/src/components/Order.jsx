@@ -186,7 +186,7 @@ const Order = () => {
                                                         {iconMap[stat.icon]}
                                                     </span>
 
-                                                    <select value={order.value}
+                                                    <select value={order.status}
                                                         onChange={e => handleStatusChange(order._id, e.target.value)}
                                                         className={`px-4 py-2 rounded-lg ${stat.bg} ${stat.color} border
                                                     border-amber-500/20 text-sm cursor-pointer`}>
