@@ -57,20 +57,11 @@ const Checkout = () => {
         setLoading(true);
         setError(null);
 
-        // CALCULATE PRICING
-        const subtotal = Math.round(totalAmount);
-        const tax = Math.round(subtotal * 0.05);
-
         const payload = {
             ...formData,
-            subTotal: subtotal,
-            tax,
-            total: subtotal + tax,
             items: cartItems.map(({ item, quantity }) => ({
-                name: item.name,
-                price: item.price,
+                itemId: item._id,
                 quantity,
-                imageUrl: item.imageUrl || ''
             }))
         };
 

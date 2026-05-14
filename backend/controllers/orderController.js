@@ -1,4 +1,6 @@
 import midtransClient from "midtrans-client";
+import mongoose from "mongoose";
+import itemModal from "../modals/itemModal.js";
 import Order from "../modals/orderModal.js";
 import 'dotenv/config';
 
@@ -20,24 +22,84 @@ const coreApi = new midtransClient.CoreApi({
 export const createOrder = async (req, res) => {
     try {
         const {
-            firstName, lastName, email, phone, address, city, zipCode,items, paymentMethod,subTotal, tax, shipping, total,
+            firstName, lastName, email, phone, address, city, zipCode, items, paymentMethod,
         } = req.body;
 
         if (!items || !Array.isArray(items) || items.length === 0) {
             return res.status(400).json({ message: 'Invalid or empty items array.' });
         }
 
-        const orderItems = items.map(({item, name, price, imageUrl, quantity}) => {
-            const base = item || {};
+        if (!['cod', 'online'].includes(paymentMethod)) {
+            return res.status(400).json({ message: 'Metode pembayaran tidak valid.' });
+        }
+
+        const requestedItems = items.map(({ itemId, item, name, quantity }) => {
+            const productId = itemId || item?._id || item?.id;
+            const productName = name || item?.name;
+            const qty = Number(quantity);
+
+            if (!Number.isInteger(qty) || qty < 1) {
+                return null;
+            }
+
+            if (productId && mongoose.Types.ObjectId.isValid(productId)) {
+                return { productId: productId.toString(), quantity: qty };
+            }
+
+            if (typeof productName === 'string' && productName.trim()) {
+                return { productName: productName.trim(), quantity: qty };
+            }
+
+            return null;
+        });
+
+        if (requestedItems.some(item => !item)) {
+            return res.status(400).json({ message: 'Item pesanan tidak valid.' });
+        }
+
+        const requestedIds = requestedItems
+            .filter(item => item.productId)
+            .map(item => item.productId);
+
+        const requestedNames = requestedItems
+            .filter(item => !item.productId && item.productName)
+            .map(item => item.productName);
+
+        const productFilters = [];
+        if (requestedIds.length) productFilters.push({ _id: { $in: requestedIds } });
+        if (requestedNames.length) productFilters.push({ name: { $in: requestedNames } });
+
+        const products = await itemModal.find({ $or: productFilters }).lean();
+        const productsById = new Map(products.map(product => [product._id.toString(), product]));
+        const productsByName = new Map(products.map(product => [product.name, product]));
+
+        const orderItems = requestedItems.map(requested => {
+            const product = requested.productId
+                ? productsById.get(requested.productId)
+                : productsByName.get(requested.productName);
+
+            if (!product) return null;
+
             return {
+                productId: product._id.toString(),
                 item: {
-                    name: base.name || name || 'Unknown',
-                    price: Number(base.price ?? price) || 0,
-                    imageUrl: base.imageUrl || imageUrl || '',
+                    name: product.name,
+                    price: Math.round(Number(product.price) || 0),
+                    imageUrl: product.imageUrl || '',
                 },
-                quantity: Number(quantity) || 0,
+                quantity: requested.quantity,
             }
         });
+
+        if (orderItems.some(item => !item)) {
+            return res.status(400).json({ message: 'Satu atau lebih item tidak ditemukan.' });
+        }
+
+        const subTotal = orderItems.reduce((sum, orderItem) => (
+            sum + orderItem.item.price * orderItem.quantity
+        ), 0);
+        const tax = Math.round(subTotal * 0.05);
+        const total = subTotal + tax;
 
         // DEFAULT SHIPPING COST
         const shippingCost = 0;
