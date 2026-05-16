@@ -1,7 +1,6 @@
 import express from 'express';
 import multer from 'multer';
 import { v2 as cloudinary } from 'cloudinary';
-import { CloudinaryStorage } from 'multer-storage-cloudinary';
 import { createItem, getItems, deleteItem, updateItemPrice } from '../controllers/itemController.js';
 import adminAuth from '../middleware/adminAuth.js';
 
@@ -14,18 +13,51 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// MULTER STORAGE → CLOUDINARY
-const storage = new CloudinaryStorage({
-    cloudinary,
-    params: {
-        folder: 'fourbite-menu',
-        allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
+const allowedImageTypes = new Set(['image/jpeg', 'image/png', 'image/webp']);
+
+const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 5 * 1024 * 1024 },
+    fileFilter: (_req, file, cb) => {
+        if (allowedImageTypes.has(file.mimetype)) {
+            cb(null, true);
+            return;
+        }
+        cb(new Error('Format gambar harus jpg, jpeg, png, atau webp.'));
     },
 });
 
-const upload = multer({ storage });
+const uploadMenuImage = async (req, _res, next) => {
+    if (!req.file) {
+        next();
+        return;
+    }
 
-itemRouter.post('/', adminAuth, upload.single('image'), createItem);
+    try {
+        const result = await new Promise((resolve, reject) => {
+            const stream = cloudinary.uploader.upload_stream(
+                { folder: 'fourbite-menu', resource_type: 'image' },
+                (error, uploadedImage) => {
+                    if (error) {
+                        reject(error);
+                        return;
+                    }
+                    resolve(uploadedImage);
+                }
+            );
+
+            stream.end(req.file.buffer);
+        });
+
+        req.file.path = result.secure_url;
+        req.file.filename = result.public_id;
+        next();
+    } catch (error) {
+        next(error);
+    }
+};
+
+itemRouter.post('/', adminAuth, upload.single('image'), uploadMenuImage, createItem);
 itemRouter.get('/', getItems);
 itemRouter.delete('/:id', adminAuth, deleteItem);
 itemRouter.patch('/:id/price', adminAuth, updateItemPrice);
