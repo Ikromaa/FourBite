@@ -16,3 +16,5 @@ admin/node_modules/
 .vscode/
 backend/.vscode/
 frontend/.vscode/
+
+LOCAL_CODEX_OLD_CHAT_CONTEXT.md
