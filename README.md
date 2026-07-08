@@ -1,213 +1,322 @@
 # FourBite
 
-A full-stack food ordering web application built as a final project for the Web Programming course. It consists of a customer-facing storefront, an admin panel, and a REST API backend — each deployed as a separate service.
+FourBite is a full-stack food ordering web application. It has a customer-facing storefront, an admin panel, and an Express REST API backend. Each surface is designed to run as a separate service in production.
 
 Live URLs:
+
 - Customer site: https://ikroma.store
-- Admin panel: https://admin.ikroma.store.com
+- Admin panel: https://admin.ikroma.store
 - Backend API: https://fourbite-backend.onrender.com
 
 ---
 
 ## Tech Stack
 
-**Backend** — Node.js, Express v5, MongoDB Atlas, Mongoose, JWT, Bcrypt, Cloudinary, Multer, Stripe
+**Backend**: Node.js, Express v5, MongoDB Atlas, Mongoose, JWT, bcrypt, cookie-parser, express-rate-limit, Cloudinary v2, Multer, Midtrans.
 
-**Frontend & Admin** — React 19, Vite, Tailwind CSS v4, React Router v7, Axios, Framer Motion
+**Frontend and Admin**: React 19, Vite, Tailwind CSS v4, React Router v7, Axios, Framer Motion.
 
 ---
 
 ## Architecture
 
-The system follows a typical three-tier architecture. The frontend and admin panel are static React apps that communicate with the backend over HTTP. The backend handles all business logic, talks to MongoDB for persistent data, Cloudinary for image storage, and Stripe for payment processing.
+FourBite uses a three-service web architecture. The customer frontend and admin panel are static React apps. Both communicate with the backend through HTTP APIs. The backend owns business logic, authentication, order processing, payment integration, media upload, and database access.
 
-```
+```text
 Customer Browser          Admin Browser
       |                        |
-      |  HTTPS requests        |  HTTPS requests
+      | HTTPS + cookies        | HTTPS + admin cookies
       v                        v
-+------------------Express REST API------------------+
-|                                                    |
-|   /api/user         /api/items      /api/orders    |
-|   /api/cart                                        |
-|                                                    |
-|   Auth Middleware (JWT)                            |
-+----+--------------------+-------------------+------+
-     |                    |                   |
-     v                    v                   v
-MongoDB Atlas        Cloudinary           Stripe API
-(Users, Items,      (Menu images)       (Checkout sessions,
- Cart, Orders)                           Payment confirmation)
++------------------ Express REST API ------------------+
+|                                                       |
+| /api/user   /api/items   /api/cart   /api/orders     |
+| /api/admin                                            |
+|                                                       |
+| JWT auth via httpOnly cookies                         |
+| Rate limited login/register/admin-login routes        |
++---------+----------------+----------------+-----------+
+          |                |                |
+          v                v                v
+   MongoDB Atlas      Cloudinary        Midtrans
+   users, items,      menu images       Snap payment,
+   cart, orders                         Core API status,
+                                        webhook updates
 ```
 
-When an admin uploads a menu item, the image goes directly to Cloudinary via Multer. The returned Cloudinary URL is stored in MongoDB. The frontend simply renders that URL — no images are stored on the server.
+The backend is the only service that talks directly to MongoDB, Cloudinary, and Midtrans. The frontend/admin never access those services directly except for the Midtrans Snap browser script used during online checkout.
 
-For online payments, the backend creates a Stripe Checkout session and returns the redirect URL to the frontend. After payment, Stripe redirects the user back to the app where the frontend calls a confirmation endpoint to update the order status.
+---
+
+## Current Payment Flow
+
+FourBite currently uses **Midtrans**, not Stripe.
+
+1. The customer selects `Online Payment` during checkout.
+2. The frontend sends the order payload to `POST /api/orders`.
+3. The backend validates the requested items against MongoDB and recalculates item price, tax, and total server-side.
+4. The backend creates a Midtrans Snap transaction and stores the Snap token on the order.
+5. The frontend opens the Midtrans Snap popup using the returned `snapToken`.
+6. Midtrans can notify the backend through `POST /api/orders/midtrans-notification`.
+7. The frontend can also check payment status through `GET /api/orders/payment-status/:orderId`.
+
+Cash on Delivery is still supported. COD orders are saved directly with successful payment status, while online orders start as pending until Midtrans confirms the result.
+
+---
+
+## Image Upload Flow
+
+Menu images are stored on Cloudinary.
+
+1. The admin uploads an image from the admin panel.
+2. The backend receives the file with Multer memory storage.
+3. The backend streams the image to Cloudinary v2.
+4. The returned Cloudinary URL is saved in MongoDB as the item image URL.
+5. The customer frontend and admin panel render the saved image URL.
+
+This avoids relying on Render's ephemeral filesystem.
+
+---
+
+## Authentication
+
+Customer and admin authentication use JWTs stored in **httpOnly cookies**.
+
+- Customer cookie: `token`
+- Admin cookie: `adminToken`
+- Cookies are `SameSite=None; Secure` in production HTTPS environments.
+- Localhost requests use local-friendly cookie settings.
+- Protected frontend/admin API calls must use `withCredentials: true`.
+
+The backend still has route middleware for user auth and admin auth. Admin routes for item mutation and order management are protected with `adminAuth`.
 
 ---
 
 ## Project Structure
 
-```
+```text
 project_sister/
-├── backend/
-│   ├── config/
-│   │   └── db.js                  # MongoDB connection
-│   ├── controllers/
-│   │   ├── cartController.js
-│   │   ├── itemController.js
-│   │   ├── orderController.js     # Stripe integration lives here
-│   │   └── userController.js
-│   ├── middleware/
-│   │   └── auth.js                # JWT verification
-│   ├── modals/
-│   │   ├── cartModal.js
-│   │   ├── itemModal.js
-│   │   ├── orderModal.js
-│   │   └── userModal.js
-│   ├── routes/
-│   │   ├── cartRoutes.js
-│   │   ├── itemRoute.js           # Cloudinary upload configured here
-│   │   ├── orderRoutes.js
-│   │   └── userRoutes.js
-│   ├── .env
-│   ├── package.json
-│   └── server.js
-│
-├── frontend/
-│   └── src/
-│       ├── cartContext/           # Global cart state via Context API
-│       ├── components/
-│       │   ├── Banner/
-│       │   ├── Navbar/
-│       │   ├── OurMenu/
-│       │   ├── OurHomeMenu/
-│       │   ├── SpecialOffer/
-│       │   ├── Checkout/
-│       │   ├── CartPage/
-│       │   ├── MyOrder/
-│       │   ├── Login/
-│       │   ├── SignUp/
-│       │   ├── PrivateRoute/      # Route guard for authenticated pages
-│       │   ├── Footer/
-│       │   └── ...
-│       ├── pages/
-│       │   ├── Home/
-│       │   ├── Menu/
-│       │   ├── Cart/
-│       │   ├── CheckoutPage/
-│       │   ├── MyOrderPage/
-│       │   ├── VerifyPaymentPage/
-│       │   ├── AboutPage/
-│       │   └── ContactPage/
-│       └── App.jsx
-│
-├── admin/
-│   └── src/
-│       └── components/
-│           ├── AddItem.jsx        # Menu upload form
-│           ├── List.jsx           # Menu list with delete
-│           ├── Order.jsx          # Order management
-│           └── Navbar.jsx
-│
-└── package.json
+|-- backend/
+|   |-- config/
+|   |   `-- db.js                  # MongoDB connection
+|   |-- controllers/
+|   |   |-- adminAuthController.js # Admin login/logout
+|   |   |-- cartController.js
+|   |   |-- itemController.js
+|   |   |-- orderController.js     # Midtrans integration and order logic
+|   |   `-- userController.js
+|   |-- middleware/
+|   |   |-- adminAuth.js
+|   |   |-- auth.js
+|   |   `-- rateLimiters.js
+|   |-- modals/                    # Mongoose models; folder name kept from original project
+|   |   |-- cartModal.js
+|   |   |-- itemModal.js
+|   |   |-- orderModal.js
+|   |   `-- userModal.js
+|   |-- routes/
+|   |   |-- adminAuthRoutes.js
+|   |   |-- cartRoutes.js
+|   |   |-- itemRoute.js           # Cloudinary v2 upload stream
+|   |   |-- orderRoutes.js
+|   |   `-- userRoutes.js
+|   |-- utils/
+|   |   `-- authCookies.js
+|   |-- package.json
+|   `-- server.js
+|
+|-- frontend/
+|   `-- src/
+|       |-- cartContext/           # Cart state and cart API calls
+|       |-- components/
+|       |   |-- Banner/
+|       |   |-- CartPage/
+|       |   |-- Checkout/
+|       |   |-- Login/
+|       |   |-- MyOrder/
+|       |   |-- Navbar/
+|       |   |-- OurHomeMenu/
+|       |   |-- OurMenu/
+|       |   |-- PrivateRoute/
+|       |   |-- SignUp/
+|       |   `-- SpecialOffer/
+|       |-- pages/
+|       |   |-- CheckoutPage/
+|       |   |-- MyOrderPage/
+|       |   `-- VerifyPaymentPage/
+|       `-- App.jsx
+|
+|-- admin/
+|   `-- src/
+|       `-- components/
+|           |-- AddItem.jsx
+|           |-- List.jsx
+|           |-- Login.jsx
+|           |-- Navbar.jsx
+|           `-- Order.jsx
+|
+`-- README.md
 ```
 
 ---
 
 ## Features
 
-**Customer**
-- Browse menu by category
-- Add items to cart (persisted via Context API)
-- Checkout with delivery address form
-- Pay via Cash on Delivery or online through Stripe
-- View order history and live status updates
+### Customer
 
-**Admin**
-- Upload new menu items with image (stored on Cloudinary)
-- Delete menu items
-- View all incoming orders
-- Update order status: Processing > Out for Delivery > Delivered
+- Register, login, and logout with httpOnly cookie auth.
+- Browse menu items.
+- Add, update, remove, and clear cart items.
+- Checkout with delivery details.
+- Pay with Cash on Delivery or Midtrans online payment.
+- View order history and payment/order status.
+
+### Admin
+
+- Login and logout with admin httpOnly cookie auth.
+- Add menu items with Cloudinary image upload.
+- Delete menu items.
+- Update item price.
+- View all customer orders.
+- Update delivery status only: `processing`, `outForDelivery`, or `delivered`.
 
 ---
 
 ## API Reference
 
 | Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| POST | /api/user/register | Register a new user | No |
-| POST | /api/user/login | Login and receive JWT | No |
-| GET | /api/items | Get all menu items | No |
-| POST | /api/items | Add a menu item with image | No |
-| DELETE | /api/items/:id | Delete a menu item | No |
-| GET | /api/cart | Get current user's cart | JWT |
-| POST | /api/cart | Add item to cart | JWT |
-| POST | /api/orders | Place an order | JWT |
-| GET | /api/orders | Get user's order history | JWT |
-| GET | /api/orders/confirm | Confirm Stripe payment | JWT |
-| GET | /api/orders/:id | Get single order | JWT |
-| GET | /api/orders/getall | Get all orders (admin) | No |
-| PUT | /api/orders/getall/:id | Update any order (admin) | No |
+| --- | --- | --- | --- |
+| POST | `/api/user/register` | Register customer and set auth cookie | No |
+| POST | `/api/user/login` | Login customer and set auth cookie | No |
+| POST | `/api/user/logout` | Clear customer auth cookie | No |
+| POST | `/api/admin/login` | Login admin and set admin cookie | No |
+| POST | `/api/admin/logout` | Clear admin cookie | No |
+| GET | `/api/items` | Get menu items | No |
+| POST | `/api/items` | Add menu item with image upload | Admin |
+| DELETE | `/api/items/:id` | Delete menu item | Admin |
+| PATCH | `/api/items/:id/price` | Update item price | Admin |
+| GET | `/api/cart` | Get current user's cart | User |
+| POST | `/api/cart` | Add item to cart | User |
+| PUT | `/api/cart/:id` | Update cart item quantity | User |
+| DELETE | `/api/cart/:id` | Delete cart item | User |
+| POST | `/api/cart/clear` | Clear cart | User |
+| POST | `/api/orders` | Create COD or Midtrans order | User |
+| GET | `/api/orders` | Get current user's orders | User |
+| GET | `/api/orders/payment-status/:orderId` | Check Midtrans payment status | User |
+| GET | `/api/orders/:id` | Get a single user order | User |
+| PUT | `/api/orders/:id` | Update a user order | User |
+| POST | `/api/orders/midtrans-notification` | Midtrans webhook callback | No |
+| GET | `/api/orders/getall` | Get all orders | Admin |
+| PUT | `/api/orders/getall/:id` | Update delivery status only | Admin |
 
 ---
 
 ## Getting Started
 
-Prerequisites: Node.js v18+, a MongoDB Atlas cluster, and a Cloudinary account.
+Prerequisites:
+
+- Node.js v18 or newer
+- MongoDB Atlas database
+- Cloudinary account
+- Midtrans sandbox or production account
+
+Install dependencies:
 
 ```bash
 git clone <repo-url>
 cd project_sister
 
-# Install dependencies for each service
-cd backend && npm install
-cd ../frontend && npm install
-cd ../admin && npm install
+cd backend
+npm install
+
+cd ../frontend
+npm install
+
+cd ../admin
+npm install
 ```
 
 Create `backend/.env`:
 
 ```env
-JWT_SECRET=your_jwt_secret
+PORT=4000
 MONGODB_URI=your_mongodb_atlas_uri
+JWT_SECRET=your_jwt_secret
+
 FRONTEND_URL=http://localhost:5173
 BACKEND_URL=http://localhost:4000
+
+ADMIN_EMAIL=admin@example.com
+ADMIN_PASSWORD_HASH=your_bcrypt_hash
+
 CLOUDINARY_CLOUD_NAME=your_cloud_name
-CLOUDINARY_API_KEY=your_api_key
-CLOUDINARY_API_SECRET=your_api_secret
-STRIPE_SECRET_KEY=sk_test_xxx
+CLOUDINARY_API_KEY=your_cloudinary_api_key
+CLOUDINARY_API_SECRET=your_cloudinary_api_secret
+
+MIDTRANS_IS_PRODUCTION=false
+MIDTRANS_SERVER_KEY=your_midtrans_server_key
+MIDTRANS_CLIENT_KEY=your_midtrans_client_key
 ```
 
 Run each service in a separate terminal:
 
 ```bash
-cd backend && npm start        # http://localhost:4000
-cd frontend && npm run dev     # http://localhost:5173
-cd admin && npm run dev        # http://localhost:5174
+cd backend
+npm run dev
+
+cd frontend
+npm run dev
+
+cd admin
+npm run dev
 ```
+
+Default local URLs:
+
+- Backend: http://localhost:4000
+- Customer frontend: http://localhost:5173
+- Admin panel: http://localhost:5174
 
 ---
 
 ## Deployment Notes
 
-The project runs on three separate Render services (two static sites, one Node.js web service). Because Render's filesystem is ephemeral, all uploaded images are stored on Cloudinary rather than the server. Add all environment variables from `.env` to the Render dashboard under the backend service settings before deploying.
+The production setup uses separate services for backend, frontend, and admin. The backend CORS allowlist currently includes the custom domains and Render static-site domains.
+
+Important production notes:
+
+- Set all backend environment variables in the Render backend service.
+- Use HTTPS domains for customer/admin apps so cross-site cookies can be sent securely.
+- Keep `MIDTRANS_IS_PRODUCTION=false` for sandbox and `true` only for production credentials.
+- Configure the Midtrans payment notification URL to point to:
+
+```text
+https://fourbite-backend.onrender.com/api/orders/midtrans-notification
+```
+
+- Uploaded images are stored on Cloudinary, not on the Render server filesystem.
+
+---
+
+## Current Known Improvements
+
+- Some frontend/admin API calls still hardcode the backend Render URL. A future cleanup should move those calls into a shared Axios client using `VITE_BACKEND_URL`.
+- `getItems()` and `getAllOrders()` still return all rows without pagination.
+- Backend still keeps both `bcrypt` and `bcryptjs` because user auth and admin auth currently use different packages.
+- The backend folder is named `modals`, although it contains Mongoose models.
 
 ---
 
 ## What I Learned
 
-Building this project from scratch covered a range of concepts that are common in real-world applications.
+**Authentication flow**: moving from browser-stored tokens to httpOnly cookies reduces token exposure and requires correct CORS and `withCredentials` behavior.
 
-**Authentication flow** — implementing JWT-based auth from token generation on login to middleware verification on protected routes, with token sent via Authorization header.
+**Image handling in production**: Render's filesystem is ephemeral, so uploaded menu images must live in Cloudinary. The current backend streams Multer memory uploads directly to Cloudinary v2.
 
-**Image handling in production** — the difference between local disk storage (which breaks on ephemeral servers) and cloud storage. Switching from Multer's disk storage to Cloudinary using `multer-storage-cloudinary` solved the issue of images disappearing on every Render redeploy.
+**Midtrans payment integration**: online payment requires server-side Snap transaction creation, frontend Snap popup handling, webhook processing, and status polling/fallback routes.
 
-**Stripe payment integration** — creating Checkout Sessions server-side, redirecting the user to Stripe's hosted page, then confirming the payment status on return via session ID lookup.
+**Multi-service deployment**: the customer frontend, admin panel, backend API, MongoDB Atlas, Cloudinary, and Midtrans all run as separate services that communicate over network boundaries.
 
-**Multi-service architecture** — managing three separate deployments (backend, frontend, admin) with environment-specific base URLs and CORS configuration that accounts for all allowed origins.
-
-**MongoDB schema design** — modeling nested data like order items and embedding subdocuments versus referencing, and using Mongoose indexes for fields that are frequently queried (payment status, order status, user ID).
+**Server-side order validation**: order totals should be recalculated on the backend from database item prices instead of trusting totals sent from the browser.
 
 ---
 
